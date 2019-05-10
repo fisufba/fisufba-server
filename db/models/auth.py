@@ -66,7 +66,7 @@ class Session(_BaseModel):
         table_name = "auth_session"
 
     user = ForeignKeyField(User)
-    token = CharField(unique=True)
+    token = CharField(max_length=128, unique=True)
 
     last_access = DateTimeField(default=datetime.datetime.utcnow())
     expire_date = DateTimeField(

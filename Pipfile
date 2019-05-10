@@ -8,10 +8,12 @@ black = "*"
 pytest = "*"
 
 [packages]
-flask = "*"
 peewee = "*"
 psycopg2 = "*"
 python-dateutil = "*"
+flask = "*"
+flask-restful = "*"
+bcrypt = "*"
 
 [requires]
 python_version = "3.7"
