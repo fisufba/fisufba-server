@@ -290,3 +290,4 @@ tags
 # End of https://www.gitignore.io/api/vim,flask,python,pycharm
 
 .idea/
+env.ini

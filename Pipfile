@@ -10,6 +10,8 @@ pytest = "*"
 [packages]
 flask = "*"
 peewee = "*"
+psycopg2 = "*"
+python-dateutil = "*"
 
 [requires]
 python_version = "3.7"
