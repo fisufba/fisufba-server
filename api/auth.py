@@ -18,6 +18,8 @@ class Auth:
         self.api.add_resource(_LogIn, _LogIn.PATH)
         self.api.add_resource(_LogOut, _LogOut.PATH)
 
+        self.sub_apps = []
+
 
 class _Accounts(Resource):
     PATH = "/".join([AUTH_ROOT_PATH])

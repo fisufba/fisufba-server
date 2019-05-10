@@ -13,6 +13,8 @@ class App:
 
         self.api.add_resource(_Index, _Index.PATH)
 
+        self.sub_apps = [Auth(app)]
+
 
 class _Index(Resource):
     PATH = APP_ROOT_PATH
@@ -27,10 +29,14 @@ class _Index(Resource):
         }
 
 
-if __name__ == "__main__":
+def main():
     app = Flask(__name__)
 
     # TODO middleware - login required for some apps/paths.
-    apps = [App(app), Auth(app)]
+    apps = [App(app)]
 
     app.run(debug=True)
+
+
+if __name__ == "__main__":
+    main()
