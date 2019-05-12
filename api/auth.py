@@ -2,41 +2,32 @@ import secrets
 
 import bcrypt
 from flask import request, url_for
-from flask_restful import Api, Resource
 
+from utils.api import AppResource
 from db.manager import manager as dbman
 
 
-AUTH_ROOT_PATH = "/accounts"
+class _Accounts(AppResource):
+    @classmethod
+    def get_path(cls):
+        return "/accounts"
 
-
-class Auth:
-    def __init__(self, app):
-        self.api = Api(app)
-
-        self.api.add_resource(_Accounts, _Accounts.PATH)
-        self.api.add_resource(_LogIn, _LogIn.PATH)
-        self.api.add_resource(_LogOut, _LogOut.PATH)
-
-        self.sub_apps = []
-
-
-class _Accounts(Resource):
-    PATH = "/".join([AUTH_ROOT_PATH])
+    @classmethod
+    def get_dependencies(cls):
+        return set()
 
     def get(self):
-        return {
-            "_links": {
-                "self": {"href": self.PATH},
-                "curies": [{"name": "auth", "href": "TODO/{rel}", "templated": True}],
-                "auth:login": {"href": _LogIn.PATH, "templated": True},
-                "auth:logout": {"href": _LogOut.PATH, "templated": True},
-            }
-        }
+        return {"_links": {"self": {"href": self.get_path()}}}
 
 
-class _LogIn(Resource):
-    PATH = "/".join([AUTH_ROOT_PATH, "login"])
+class _LogIn(AppResource):
+    @classmethod
+    def get_path(cls):
+        return "/accounts/login"
+
+    @classmethod
+    def get_dependencies(cls):
+        return set()
 
     def post(self):
 
@@ -61,11 +52,17 @@ class _LogIn(Resource):
             )
             if created:
                 session_token = session.token
-        return {"_links": {"self": {"href": self.PATH}}, "token": session_token}
+        return {"_links": {"self": {"href": self.get_path()}}, "token": session_token}
 
 
-class _LogOut(Resource):
-    PATH = "/".join([AUTH_ROOT_PATH, "logout"])
+class _LogOut(AppResource):
+    @classmethod
+    def get_path(cls):
+        return "/accounts/logout"
+
+    @classmethod
+    def get_dependencies(cls):
+        return set()
 
     def post(self):
 
@@ -75,7 +72,7 @@ class _LogOut(Resource):
 
         return {
             "_links": {
-                "self": {"href": self.PATH},
+                "self": {"href": self.get_path()},
                 "curies": [{"name": "rd", "href": "TODO/{rel}", "templated": True}],
                 "rd:index": {"href": url_for("_index"), "templated": True},
             },
