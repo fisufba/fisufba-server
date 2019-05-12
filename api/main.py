@@ -1,14 +1,16 @@
 from flask import Flask
 from flask_restful import Api
 
-from utils.api import add_resources_from
+from utils.api import add_app_resources_from
 
+
+# TODO middleware - login required for some apps/paths.
 
 if __name__ == "__main__":
     app = Flask(__name__)
     api = Api(app)
 
-    # TODO middleware - login required for some apps/paths.
-    add_resources_from(api, "api.app")
+    #: Adding the application tree into our Api.
+    add_app_resources_from(api, "api.app")
 
-    app.run(debug=False)
+    app.run(debug=True)

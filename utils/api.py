@@ -1,71 +1,127 @@
 import inspect
 from abc import abstractmethod
 from importlib import import_module
-from typing import List, Set, Tuple, Type
+from typing import Set, Type
 
 from flask_restful import Api, Resource
 
 
 class AppResource(Resource):
+    """Defines the class of an application resource.
+
+    """
+
     @classmethod
     @abstractmethod
     def get_path(cls) -> str:
+        """Returns the url path of this AppResource.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            An url path.
+
+        """
         raise NotImplementedError
 
     @classmethod
     @abstractmethod
     def get_dependencies(cls) -> Set[str]:
+        """Returns the dependencies of this AppResource.
+
+        Notes:
+            If there's no dependency this must return an empty set.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            A set of module names that contains AppResource
+                classes used by this AppResource.
+
+        """
         raise NotImplementedError
 
 
-def get_resources(module) -> Tuple[List[Type[AppResource]], Set[str]]:
-    resources, dependencies = [], set()
+def get_app_resources(module_name) -> Set[Type[AppResource]]:
+    """Retrieves AppResource classes from a Module.
+
+    Args:
+        module_name: The name of the target Module.
+
+    Returns:
+        AppResource classes defined in the Module
+            which name is `module_name`.
+
+    """
+    module = import_module(module_name)
+
+    app_resources = set()
     for _, cls in inspect.getmembers(module, inspect.isclass):
         if inspect.getmodule(cls) is not module:
             continue
         if not issubclass(cls, AppResource):
-            if issubclass(cls, Resource):
-                raise ValueError
             continue
-        resources.append(cls)
-        dependencies.update(cls.get_dependencies())
-    return resources, dependencies
+        app_resources.add(cls)
+    return app_resources
 
 
-def add_resources(api: Api, resources: List[Type[AppResource]]):
-    for resource in resources:
-        if resource in api.resources:
-            raise ValueError
-        if resource.get_path() in api.urls:
-            raise ValueError
-        api.add_resource(resource, resource.get_path())
+def add_app_resources(api: Api, app_resources: Set[Type[AppResource]]):
+    """Adds a set of AppResource classes into an Api.
+
+    Args:
+        api: Instance of the target Api.
+        app_resources: Set of AppResource classes to be added.
+
+    Raises:
+        AssertionError: When it tries to add an AppResource that
+            was previously added in `api`.
+        AssertionError: When it tries to add an AppResource with
+            a path that already exists in `api`.
+
+    """
+    for app_res in app_resources:
+        assert app_res not in api.resources
+        assert app_res.get_path() not in api.urls
+        api.add_resource(app_res, app_res.get_path())
 
 
-def add_resources_from(api: Api, module_name: str):
-    module = import_module(module_name)
-    resources, dep_paths = get_resources(module)
-    del module
+def add_app_resources_from(api: Api, module_name: str):
+    """Adds a set of AppResource classes from a Module into an Api.
 
-    add_resources(api, resources)
-    del resources
+    It also adds all dependencies of all added AppResource classes.
 
-    seen_dep_paths = set()
-    while len(dep_paths) > 0:
-        dep_path = dep_paths.pop()
+    Args:
+        api: Instance of the target Api.
+        module_name: The name of the target Module.
 
-        assert dep_path not in seen_dep_paths
+    Raises:
+        AssertionError: When there's a dependency cycle.
 
-        if dep_path == module_name:
-            raise ValueError
-        seen_dep_paths.add(dep_path)
+    """
+    app_resources = get_app_resources(module_name)
 
-        dep_module = import_module(dep_path)
-        resources, _dep_paths = get_resources(dep_module)
-        del dep_module
+    add_app_resources(api, app_resources)
 
-        add_resources(api, resources)
-        del resources
+    dep_names = set()
+    for app_res in app_resources:
+        dep_names.update(app_res.get_dependencies())
 
-        _dep_paths.difference_update()
-        dep_paths.update(_dep_paths)
-        del _dep_paths
+    seen_module_names = {module_name}
+    while len(dep_names) > 0:
+        dep_name = dep_names.pop()
+
+        assert dep_name not in seen_module_names
+
+        app_resources = get_app_resources(dep_name)
+
+        add_app_resources(api, app_resources)
+
+        for app_res in app_resources:
+            app_res_dep_names = app_res.get_dependencies()
+            app_res_dep_names.difference_update(seen_module_names)
+
+            dep_names.update(app_res_dep_names)
+
+        seen_module_names.add(dep_name)
