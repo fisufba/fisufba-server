@@ -17,7 +17,7 @@ by pipenv.
 - [pipenv](https://docs.pipenv.org)
 - [python3.7](https://www.python.org/downloads/release/python-370/)
 
-### Setting the Environment
+### Environment Setup
 
 pipenv takes care of all python packages and dependencies of this
 project. To configure its environment in development you must run:
@@ -39,10 +39,17 @@ the project's root:
 $export PYTHONPATH=/path/to/fisufba-server
 ```
 
-Finally you'll have to configure the `env.ini` file. There's a example
+Finally you'll have to configure the `env.ini` file. There's an example
 in the project's root (`env.ini.example`), you can copy it. To do this,
 you'll have to provide a Postgres database, an user (role) with
 permissions over this database and its password.
+
+After you complete the environment setup, you must create the database
+tables by running:
+
+```
+$python /path/to/fisufba-server/db/main.py
+```
 
 ### Running
 
@@ -52,7 +59,7 @@ You can start the application running:
 $python /path/to/fisufba-server/api/main.py
 ```
 
-It will listen and send information to
+It will listen and send information through
 [http://localhost:5000](http://localhost:5000).
 
 ### Testing
