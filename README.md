@@ -23,20 +23,20 @@ pipenv takes care of all python packages and dependencies of this
 project. To configure its environment in development you must run:
 
 ```
-$pipenv --install -d
+$ pipenv --install -d
 ```
 
 To get inside the created pipenv environment, run:
 
 ```
-$pipenv shell
+$ pipenv shell
 ```
 
 You'll also need to set `$PYTHONPATH` environment variable pointed to
 the project's root:
 
 ```
-$export PYTHONPATH=/path/to/fisufba-server
+$ export PYTHONPATH=/path/to/fisufba-server
 ```
 
 Finally you'll have to configure the `env.ini` file. There's an example
@@ -48,7 +48,7 @@ After you complete the environment setup, you must create the database
 tables by running:
 
 ```
-$python /path/to/fisufba-server/db/main.py
+$ python /path/to/fisufba-server/db/main.py
 ```
 
 ### Running
@@ -56,7 +56,7 @@ $python /path/to/fisufba-server/db/main.py
 You can start the application running:
 
 ```
-$python /path/to/fisufba-server/api/main.py
+$ python /path/to/fisufba-server/api/main.py
 ```
 
 It will listen and send information through
