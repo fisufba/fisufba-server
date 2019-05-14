@@ -23,7 +23,7 @@ pipenv takes care of all python packages and dependencies of this
 project. To configure its environment in development you must run:
 
 ```
-$ pipenv --install -d
+$ pipenv install -d
 ```
 
 To get inside the created pipenv environment, run:
