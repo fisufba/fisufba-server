@@ -1,6 +1,23 @@
 import re
 
 
+def is_valid_email(email: str) -> bool:
+    """Checks if a string is a valid email.
+
+        Args:
+            email: Possible email to be validated.
+
+        Returns:
+            True when email is a valid email, False otherwise.
+
+    """
+
+    email_re = re.compile(r"^[^@]+@[^@$]+$")
+    if email_re.match(email) is None:
+        return False
+    return True
+
+
 def is_valid_cpf(cpf: str) -> bool:
     """Checks if a string is a valid CPF.
 

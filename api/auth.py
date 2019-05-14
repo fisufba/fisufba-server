@@ -4,11 +4,12 @@ import bcrypt
 from flask import request, url_for
 
 from utils.api import AppResource
-from utils.utils import is_valid_cpf
+from utils.utils import is_valid_cpf, is_valid_email
 from db.manager import manager as dbman
 
 
-class _Accounts(AppResource):
+class _Signup(AppResource):
+
     """AppResource responsible for the logup and logoff processes an Api.
 
     """
@@ -21,7 +22,7 @@ class _Accounts(AppResource):
             An url path.
 
         """
-        return "/accounts"
+        return "/accounts/signup"
 
     @classmethod
     def get_dependencies(cls):
@@ -36,6 +37,61 @@ class _Accounts(AppResource):
 
         """
         return set()
+
+    def post(self):
+
+        """Treats HTTP POST requests.
+
+        If there's no running session and valid credentials are posted
+        it performs an user login.
+
+        Notes:
+            For better understanding, refer: http://stateless.co/hal_specification.html.
+
+        Raises:
+            TODO.
+
+        Returns:
+            Dict object following the HAL format.
+
+        """
+
+        #  TODO check if the user has privileges to create another user
+
+        cpf = request.form.get("cpf")
+        password = request.form.get("password")
+        display_name = request.form.get("display_name")
+        email = request.form.get("email")
+
+        # checking whether the variables are strings
+        if not isinstance(cpf, str):
+            raise Exception("Invalid cpf")
+        if not isinstance(password, str):
+            raise Exception("Invalid password")
+        if not isinstance(display_name, str):
+            raise Exception("Invalid display_name")
+
+        if not is_valid_cpf(cpf):
+            raise Exception("Invalid cpf")  # TODO InvalidCPFError.
+
+        if not email is None and not is_valid_email(email):
+            raise Exception("Invalid email")  # TODO InvalidEmailError.
+
+        user, created = dbman.auth.create_user(
+            user_information={
+                "cpf": cpf,
+                "password": bcrypt.hashpw(
+                    password.encode("utf-8"), bcrypt.gensalt()
+                ).decode("utf-8"),
+                "display_name": display_name,
+                "email": email,
+            }
+        )
+
+        if not created:
+            raise Exception("User wasn't stored")  # TODO User not created
+
+        return {"_links": {"self": {"href": self.get_path()}}, "created": created}
 
 
 class _Login(AppResource):

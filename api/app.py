@@ -44,11 +44,12 @@ class _Index(AppResource):
             Dict object following the HAL format.
 
         """
+
         return {
             "_links": {
                 "self": {"href": self.get_path()},
                 "curies": [{"name": "auth", "href": "TODO/{rel}", "templated": True}],
-                "auth:accounts": {"href": url_for("_accounts"), "templated": True},
+                "auth:signup": {"href": url_for("_signup"), "templated": True},
                 "auth:login": {"href": url_for("_login"), "templated": True},
                 "auth:logout": {"href": url_for("_logout"), "templated": True},
             }
