@@ -8,7 +8,7 @@ def is_valid_email(email: str) -> bool:
             email: Possible email to be validated.
 
         Returns:
-            True when email is a valid email, False otherwise.
+            True when `email` is a valid email, False otherwise.
 
     """
 
@@ -25,7 +25,7 @@ def is_valid_cpf(cpf: str) -> bool:
         cpf: Possible CPF to be validated.
 
     Returns:
-        True when cpf is a valid CPF, False otherwise.
+        True when `cpf` is a valid CPF, False otherwise.
 
     """
     cpf_re = re.compile(r"^\d{3}\.\d{3}\.\d{3}-\d{2}$")

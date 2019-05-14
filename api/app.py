@@ -1,6 +1,6 @@
 from flask import url_for
 
-from utils.api import AppResource
+from api.abc import AppResource
 
 
 class _Index(AppResource):
@@ -44,7 +44,6 @@ class _Index(AppResource):
             Dict object following the HAL format.
 
         """
-
         return {
             "_links": {
                 "self": {"href": self.get_path()},

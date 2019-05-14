@@ -3,14 +3,13 @@ import secrets
 import bcrypt
 from flask import request, url_for
 
-from utils.api import AppResource
+from api.abc import AppResource
 from utils.utils import is_valid_cpf, is_valid_email
 from db.manager import manager as dbman
 
 
 class _Signup(AppResource):
-
-    """AppResource responsible for the logup and logoff processes an Api.
+    """AppResource responsible for the logup and logoff processes of an Api.
 
     """
 
@@ -39,11 +38,11 @@ class _Signup(AppResource):
         return set()
 
     def post(self):
-
         """Treats HTTP POST requests.
 
-        If there's no running session and valid credentials are posted
-        it performs an user login.
+        If there's a running session and valid credentials are posted
+        it performs may an user creation if the current user has the
+        appropriate permissions.
 
         Notes:
             For better understanding, refer: http://stateless.co/hal_specification.html.
@@ -52,7 +51,8 @@ class _Signup(AppResource):
             TODO.
 
         Returns:
-            Dict object following the HAL format.
+            Dict object following the HAL format
+                with information about the execution.
 
         """
 
@@ -231,6 +231,7 @@ class _Logout(AppResource):
                 with information about the execution.
 
         """
+
         session_token = request.form.get("Authentication")
 
         if session_token is None:
