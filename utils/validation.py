@@ -11,7 +11,7 @@ def is_valid_email(email: str) -> bool:
             True when `email` is a valid email, False otherwise.
 
     """
-    email_re = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
+    email_re = re.compile(r"^[^@]+@[^@$]+$")
     return email_re.match(email) is not None
 
 
