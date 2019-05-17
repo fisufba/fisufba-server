@@ -1,22 +1,15 @@
 
-# Created by https://www.gitignore.io/api/vim,django,python,pycharm
-# Edit at https://www.gitignore.io/?templates=vim,django,python,pycharm
+# Created by https://www.gitignore.io/api/vim,flask,python,pycharm
+# Edit at https://www.gitignore.io/?templates=vim,flask,python,pycharm
 
-### Django ###
-*.log
-*.pot
-*.pyc
-__pycache__/
-local_settings.py
-db.sqlite3
-media
+### Flask ###
+instance/*
+!instance/.gitignore
+.webassets-cache
 
-# If your build process includes running collectstatic, then you probably don't need or want to include staticfiles/
-# in your Git repository. Update and uncomment the following line accordingly.
-# <django-project-name>/staticfiles/
-
-### Django.Python Stack ###
+### Flask.Python Stack ###
 # Byte-compiled / optimized / DLL files
+__pycache__/
 *.py[cod]
 *$py.class
 
@@ -69,12 +62,15 @@ coverage.xml
 
 # Translations
 *.mo
+*.pot
 
 # Django stuff:
+*.log
+local_settings.py
+db.sqlite3
 
 # Flask stuff:
 instance/
-.webassets-cache
 
 # Scrapy stuff:
 .scrapy
@@ -291,5 +287,7 @@ tags
 # Persistent undo
 [._]*.un~
 
-# End of https://www.gitignore.io/api/vim,django,python,pycharm
+# End of https://www.gitignore.io/api/vim,flask,python,pycharm
 
+.idea/
+env.ini

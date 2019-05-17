@@ -1,0 +1,22 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+black = "*"
+pytest = "*"
+
+[packages]
+peewee = "*"
+psycopg2 = "*"
+python-dateutil = "*"
+flask = "*"
+flask-restful = "*"
+bcrypt = "*"
+
+[requires]
+python_version = "3.7"
+
+[pipenv]
+allow_prereleases = true
