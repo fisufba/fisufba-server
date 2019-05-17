@@ -4,12 +4,12 @@ import bcrypt
 from flask import request, url_for
 
 from api.abc import AppResource
-from utils.utils import is_valid_cpf, is_valid_email
 from db.manager import manager as dbman
+from utils.validation import is_valid_cpf, is_valid_email
 
 
 class _Signup(AppResource):
-    """AppResource responsible for the logup and logoff processes of an Api.
+    """AppResource responsible for User account creation and deletion.
 
     """
 
@@ -21,7 +21,7 @@ class _Signup(AppResource):
             An url path.
 
         """
-        return "/accounts/signup"
+        return "/accounts"
 
     @classmethod
     def get_dependencies(cls):
@@ -37,11 +37,13 @@ class _Signup(AppResource):
         """
         return set()
 
+    # TODO @authentication_required - UnauthenticatedError.
+    # TODO @permission_required(permission) - AccessDeniedError.
     def post(self):
         """Treats HTTP POST requests.
 
         If there's a running session and valid credentials are posted
-        it performs may an user creation if the current user has the
+        it performs may an new_user creation if the current new_user has the
         appropriate permissions.
 
         Notes:
@@ -56,8 +58,6 @@ class _Signup(AppResource):
 
         """
 
-        #  TODO check if the user has privileges to create another user
-
         cpf = request.form.get("cpf")
         password = request.form.get("password")
         display_name = request.form.get("display_name")
@@ -65,21 +65,23 @@ class _Signup(AppResource):
 
         # checking whether the variables are strings
         if not isinstance(cpf, str):
-            raise Exception("Invalid cpf")
+            raise Exception("Invalid cpf")  # TODO InvalidCPFError.
         if not isinstance(password, str):
-            raise Exception("Invalid password")
+            raise Exception("Invalid password")  # TODO InvalidPasswordError.
         if not isinstance(display_name, str):
-            raise Exception("Invalid display_name")
+            raise Exception("Invalid display_name")  # TODO InvaliDisplayNameError.
+        if email is not None and not isinstance(email, str):
+            raise Exception("Invalid email")  # TODO InvalidEmailError.
 
         if not is_valid_cpf(cpf):
             raise Exception("Invalid cpf")  # TODO InvalidCPFError.
 
-        if not email is None and not is_valid_email(email):
+        if email is not None and not is_valid_email(email):
             raise Exception("Invalid email")  # TODO InvalidEmailError.
 
-        user, created = dbman.auth.create_user(
+        new_user, created = dbman.auth.create_user(
             user_information={
-                "cpf": cpf,
+                "cpf": cpf.replace(".", "").replace("-", ""),
                 "password": bcrypt.hashpw(
                     password.encode("utf-8"), bcrypt.gensalt()
                 ).decode("utf-8"),
@@ -89,9 +91,12 @@ class _Signup(AppResource):
         )
 
         if not created:
-            raise Exception("User wasn't stored")  # TODO User not created
+            raise Exception("User wasn't stored")  # TODO NotCreatedError.
 
-        return {"_links": {"self": {"href": self.get_path()}}, "created": created}
+        hal = {"_links": {"self": {"href": self.get_path()}}, "created": created}
+        if created:
+            hal["user_id"] = new_user.id
+        return hal
 
 
 class _Login(AppResource):
@@ -123,6 +128,7 @@ class _Login(AppResource):
         """
         return set()
 
+    # TODO @unauthentication_required - AuthenticatedError.
     def post(self):
         """Treats HTTP POST requests.
 
@@ -140,10 +146,6 @@ class _Login(AppResource):
                 with a session token (that may be valid or None).
 
         """
-
-        if request.form.get("Authentication") is not None:
-            raise Exception("Logout required")  # TODO AuthenticatedError.
-
         cpf = request.form.get("cpf")
         password = request.form.get("password")
 
@@ -154,7 +156,10 @@ class _Login(AppResource):
 
         if not is_valid_cpf(cpf):
             raise Exception("Invalid cpf")  # TODO InvalidCPFError.
-        target_user = dbman.auth.get_user({"cpf": cpf})
+
+        target_user = dbman.auth.get_user(
+            {"cpf": cpf.replace(".", "").replace("-", "")}
+        )
         if target_user is None:
             raise Exception("Invalid cpf")  # TODO InvalidCPFError.
 
@@ -162,7 +167,6 @@ class _Login(AppResource):
             password.encode("utf-8"), target_user.password.encode("utf-8")
         ):
             raise Exception("Invalid password")  # TODO InvalidPasswordError.
-        # TODO check password's min and max length.
 
         session, session_token = None, None
         while session_token is None:
@@ -173,17 +177,16 @@ class _Login(AppResource):
                 session_token = session.token
 
         #: True if the login was successful, False otherwise.
-        logged_in = dbman.auth.update_user_last_login(user=target_user)
+        logged_in = dbman.auth.update_user_last_login(user_id=target_user.id)
 
         if not logged_in:
-            dbman.auth.expire_sessions(session=session)
-            session_token = None
+            dbman.auth.expire_sessions(session_id=session.id)
 
-        return {
-            "_links": {"self": {"href": self.get_path()}},
-            "logged_in": logged_in,
-            "token": session_token,
-        }
+        hal = {"_links": {"self": {"href": self.get_path()}}, "logged_in": logged_in}
+        if logged_in:
+            hal["user_id"] = target_user.id
+            hal["token"] = session_token
+        return hal
 
 
 class _Logout(AppResource):
@@ -215,6 +218,7 @@ class _Logout(AppResource):
         """
         return set()
 
+    # TODO @authentication_required - UnauthenticatedError.
     def post(self):
         """Treats HTTP POST requests.
 
@@ -232,6 +236,7 @@ class _Logout(AppResource):
 
         """
 
+        # TODO store the session in flask.g using a middleware and skip the next 10 lines.
         session_token = request.form.get("Authentication")
 
         if session_token is None:
@@ -247,7 +252,7 @@ class _Logout(AppResource):
             raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
 
         #: True if the logout was successful, False otherwise.
-        logged_out = dbman.auth.expire_sessions(session=target_session)
+        logged_out = dbman.auth.expire_sessions(session_id=target_session.id)
 
         return {
             "_links": {
