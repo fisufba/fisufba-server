@@ -4,6 +4,7 @@ from dateutil import relativedelta
 from peewee import BooleanField
 from peewee import CharField
 from peewee import DateTimeField
+from peewee import FixedCharField
 from peewee import ForeignKeyField
 from peewee import TextField
 
@@ -14,8 +15,8 @@ class User(_BaseModel):
     class Meta:
         table_name = "auth_user"
 
-    cpf = CharField(max_length=14, unique=True)
-    password = CharField(max_length=60)
+    cpf = FixedCharField(max_length=11, unique=True)
+    password = FixedCharField(max_length=60)
 
     display_name = CharField()
     email = CharField(unique=True, default=None, null=True)
@@ -66,7 +67,7 @@ class Session(_BaseModel):
         table_name = "auth_session"
 
     user = ForeignKeyField(User)
-    token = CharField(max_length=128, unique=True)
+    token = FixedCharField(max_length=128, unique=True)
 
     last_access = DateTimeField(default=datetime.datetime.utcnow())
     expire_date = DateTimeField(

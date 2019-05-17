@@ -14,5 +14,3 @@ if __name__ == "__main__":
     add_app_resources_from(api, "api.app")
 
     app.run(debug=True)
-
-    Exception
