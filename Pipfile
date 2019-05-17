@@ -14,6 +14,7 @@ python-dateutil = "*"
 flask = "*"
 flask-restful = "*"
 bcrypt = "*"
+gunicorn = "*"
 
 [requires]
 python_version = "3.7"

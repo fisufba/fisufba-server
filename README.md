@@ -8,16 +8,16 @@ These instructions will guide you on how to deploy this application in
 your local machine for development and testing purposes.<!-- See deployment-->
 <!--for notes on how to deploy the project on a live system.-->
 
-### Prerequisites
+### Development Environment Setup
 
-There're few prerequisites because all other python packages are handled
-by pipenv.
+#### Prerequisites
 
 - [PostgreSQL](https://www.postgresql.org/)
 - [pipenv](https://docs.pipenv.org)
 - [python3.7](https://www.python.org/downloads/release/python-370/)
 
-### Environment Setup
+
+#### Environment Setup
 
 pipenv takes care of all python packages and dependencies of this
 project. To configure its environment in development you must run:
@@ -51,7 +51,7 @@ tables by running:
 $ python /path/to/fisufba-server/db/main.py
 ```
 
-### Running
+#### Running
 
 You can start the application running:
 
@@ -61,6 +61,41 @@ $ python /path/to/fisufba-server/api/main.py
 
 It will listen and send information through
 [http://localhost:5000](http://localhost:5000).
+
+
+### Deployment Environment Setup
+
+For deployment purposes, you need Docker and PostgreSQL only. Make sure you have a `fisufba` table already created in PostgreSQL.
+
+Configure `env.ini` as explained in the development section.
+
+Build the container by using.
+
+```
+$ docker build -t fisufba .
+```
+
+Then create the database tables by running:
+
+```
+$ docker run --net=host fisufba python /app/db/main.py
+```
+
+Finally execute the actual web application:
+
+```
+$ docker run -d --name fisufba --rm -p 8000:8000 --net=host fisufba
+```
+
+To redeploy, execute the following:
+
+```
+$ docker container kill fisufba
+$ docker build -t fisufba .
+$ docker run -d --name fisufba --rm -p 8000:8000 --net=host fisufba
+```
+
+TODO remove `--net=host` and explain how to properly setup a network between the container and PSQL.
 
 ### Testing
 
