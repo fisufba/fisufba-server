@@ -72,27 +72,27 @@ Configure `env.ini` as explained in the development section.
 Build the container by using.
 
 ```
-$ docker build -t fisufba .
+$ docker build -t fisufba-server .
 ```
 
 Then create the database tables by running:
 
 ```
-$ docker run --net=host fisufba python /app/db/main.py
+$ docker run --net=host fisufba-server python /app/db/main.py
 ```
 
 Finally execute the actual web application:
 
 ```
-$ docker run -d --name fisufba --rm -p 8000:8000 --net=host fisufba
+$ docker run -d --name fisufba-server --rm -p 8000:8000 --net=host fisufba-server
 ```
 
 To redeploy, execute the following:
 
 ```
-$ docker container kill fisufba
-$ docker build -t fisufba .
-$ docker run -d --name fisufba --rm -p 8000:8000 --net=host fisufba
+$ docker container kill fisufba-server
+$ docker build -t fisufba-server .
+$ docker run -d --name fisufba-server --rm -p 8000:8000 --net=host fisufba-server
 ```
 
 TODO remove `--net=host` and explain how to properly setup a network between the container and PSQL.
