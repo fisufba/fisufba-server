@@ -65,7 +65,7 @@ It will listen and send information through
 
 ### Deployment Environment Setup
 
-For deployment purposes, you need Docker and PostgreSQL only. Make sure you have a `fisufba` table already created in PostgreSQL.
+For deployment purposes, you need Docker and PostgreSQL only. Make sure you have a `fisufba` database already created in PostgreSQL.
 
 Configure `env.ini` as explained in the development section.
 
