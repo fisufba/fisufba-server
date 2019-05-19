@@ -93,7 +93,7 @@ class Auth:
             raise ValueError(f'"{cpf}" is not a valid non-masked CPF')
 
         #: email validation.
-        if email is not None and is_valid_email(email):
+        if email is not None and not is_valid_email(email):
             raise ValueError(f'"{email}" is not a valid email')
 
         #: other validation will occur by the database (e.g. password length).
@@ -238,7 +238,7 @@ class Auth:
 
     def add_user_to_group(self, user, group):
         try:
-            UserGroups.create(user=user, group=group), True
+            return UserGroups.create(user=user, group=group), True
         except peewee.IntegrityError:
             return None, False
 
