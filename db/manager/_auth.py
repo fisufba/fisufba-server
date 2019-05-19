@@ -2,7 +2,12 @@ import datetime
 
 import peewee
 
-from db.models.auth import User, Session
+from db.models.auth import Group
+from db.models.auth import GroupPermissions
+from db.models.auth import Permission
+from db.models.auth import Session
+from db.models.auth import User
+from db.models.auth import UserGroups
 from utils.validation import is_valid_cpf, is_valid_email
 
 
@@ -224,3 +229,48 @@ class Auth:
                 query = query.where(Session.token == token)
 
         return query.execute() != 0
+
+    def get_group(self, group_name):
+        try:
+            return Group.get(name=group_name)
+        except Group.DoesNotExist:
+            return None
+
+    def add_user_to_group(self, user, group):
+        try:
+            UserGroups.create(user=user, group=group), True
+        except peewee.IntegrityError:
+            return None, False
+
+    def get_user_groups(self, user):
+        try:
+            query = UserGroups.select().where(UserGroups.user == user)
+            return query.execute()
+        except UserGroups.DoesNotExist:
+            return None
+
+    def get_permission(self, permission_codename):
+        try:
+            return Permission.get(codename=permission_codename)
+        except Permission.DoesNotExist:
+            return None
+
+    def get_group_permissions(self, group):
+        try:
+            query = GroupPermissions.select().where(GroupPermissions.group == group)
+            return query.execute()
+        except GroupPermissions.DoesNotExist:
+            return None
+
+    def get_user_permissions(self, user):
+        user_permissions = set()
+        user_groups = self.get_user_groups(user)
+        if user_groups is None:
+            return None
+        for group in user_groups:
+            group_permissions = self.get_group_permissions(group)
+            if group_permissions is not None:
+                user_permissions.update(set(group_permissions))
+        if len(user_permissions) == 0:
+            return None
+        return user_permissions
