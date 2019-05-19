@@ -149,33 +149,22 @@ class Auth:
         assert result <= 1  #: This should never fail.
         return result != 0
 
-    def get_sessions(self, session_information: dict):
-        """Retrieves Sessions from the database.
+    def get_session(self, session_token: str):
+        """Retrieves a Session from the database.
 
         Args:
-            session_information: dict that contains sessions' main information.
-                It may contain the sessions' respective user or token.
-                Other information won't be useful.
+            session_token: the token of the target session.
 
         Returns:
-            List of all Session found in the database using `session_information`
-                or None it no Session was found.
+            The Session found in the database using `session_token`
+                or None if no Session was found.
 
         """
-        assert "user" in session_information or "token" in session_information
-
         try:
-            query = Session.select()
-
-            if "user" in session_information:
-                user = session_information["user"]
-                query = query.where(Session.user == user)
-
-            if "token" in session_information:
-                token = session_information["token"]
-                query = query.where(Session.token == token)
-
-            return query.execute()
+            query = Session.select().where(Session.token == session_token)
+            result = query.execute()
+            assert len(result) == 1  #: This should never fail.
+            return result[0]
         except Session.DoesNotExist:
             return None
 
