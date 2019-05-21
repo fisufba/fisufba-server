@@ -60,6 +60,8 @@ class _Signup(AppResource):
 
         """
 
+        # check_permissions(["create_attendant", "create_physiotherapist", "create_patient"])
+
         cpf = request.form.get("cpf")
         password = request.form.get("password")
         display_name = request.form.get("display_name")
@@ -273,6 +275,111 @@ class _Logout(AppResource):
         return hal
 
 
+@authentication_required
+class _Update(AppResource):
+
+    @classmethod
+    def get_path(cls):
+        """Returns the url path of this AppResource.
+
+        Returns:
+            An url path.
+
+        """
+        return "/accounts/update/<string:user_id>"
+
+    @classmethod
+    def get_dependencies(cls):
+        """Returns the dependencies of this AppResource.
+
+        Notes:
+            If there's no dependency this must return an empty set.
+
+        Returns:
+            A set of module names that contains AppResource
+                classes used by this AppResource.
+
+        """
+        return set()
+
+    def patch(self, user_id):
+
+        # check_permissions(["change_attendant_data", "change_physiotherapist_data", "change_patient_data"])
+
+        cpf = request.form.get("cpf")
+        password = request.form.get("password")
+        display_name = request.form.get("display_name")
+        email = request.form.get("email")
+
+        # checking whether the variables are strings
+        if cpf is not None and not isinstance(cpf, str):
+            raise Exception("Invalid cpf")  # TODO InvalidCPFError.
+        if password is not None and not isinstance(password, str):
+            raise Exception("Invalid password")  # TODO InvalidPasswordError.
+        if display_name is not None and not isinstance(display_name, str):
+            raise Exception("Invalid display_name")  # TODO InvaliDisplayNameError.
+        if email is not None and not isinstance(email, str):
+            raise Exception("Invalid email")  # TODO InvalidEmailError.
+
+        # inserting user data in a dict
+        user_information = {}
+        if cpf is not None:
+            user_information['cpf'] = cpf
+        if password is not None:
+            user_information['password'] = password
+        if display_name is not None:
+            user_information['display_name'] = display_name
+        if email is not None:
+            user_information['email'] = email
+
+        user, updated = dbman.auth.update_user(user_information=user_information, user_id=user_id)
+
+        hal = {"_links": {"self": {"href": self.get_path()}}, "updated": updated}
+        if updated:
+            hal["user_id"] = user_id
+        return hal
+
+
+# @authentication_required
+class _Show(AppResource):
+
+    @classmethod
+    def get_path(cls):
+        """Returns the url path of this AppResource.
+
+        Returns:
+            An url path.
+
+        """
+        return "/accounts/show/<string:user_id>"
+
+    @classmethod
+    def get_dependencies(cls):
+        """Returns the dependencies of this AppResource.
+
+        Notes:
+            If there's no dependency this must return an empty set.
+
+        Returns:
+            A set of module names that contains AppResource
+                classes used by this AppResource.
+
+        """
+        return set()
+
+    def get(self, user_id):
+
+        # check_permissions(["read_attendant_data", "read_physiotherapist_data", "read_patient_data"])
+
+        user = dbman.auth.get_user(user_id=user_id)
+
+        found = user is not None
+
+        hal = {"_links": {"self": {"href": self.get_path()}}, "found": found}
+        if found:
+            hal["user_id"] = user.id
+        return hal
+
 def authentication():
     try:
         getattr(g, "session")
@@ -298,5 +405,23 @@ def authentication():
 
         setattr(g, "session", session)
 
+def check_permissions(required_permissions: list):
+
+    user = g.session.user
+    user_permissions = dbman.auth.get_user_permissions(user)
+    if user_permissions is None:
+        raise Exception("User doesn't have permission")
+
+    user_permissions = list(user_permissions)
+    for index, item in enumerate(user_permissions):
+        user_permissions[index] = user_permissions[index].permission
+
+    print(required_permissions)
+    print(user_permissions)
+
+    for permission in required_permissions:
+        print(dbman.auth.get_permission(permission))
+        if dbman.auth.get_permission(permission) not in user_permissions:
+            raise Exception("User doesn't have permission") # TODO AccessDeniedError.
 
 BEFORE_REQUEST_FUNCS = (authentication,)
