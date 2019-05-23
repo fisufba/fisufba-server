@@ -1,5 +1,5 @@
 from db.models.base import DB
-from db.manager.auth import Auth
+from db.manager._auth import Auth
 
 
 class Manager:

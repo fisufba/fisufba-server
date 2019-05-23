@@ -1,9 +1,11 @@
 import secrets
+import datetime
 
 import bcrypt
-from flask import request, url_for
+from flask import g, request, url_for
 
 from api.abc import AppResource
+from api.abc import authentication_required, unauthentication_required
 from db.manager import manager as dbman
 from utils.validation import is_valid_cpf, is_valid_email
 
@@ -37,7 +39,7 @@ class _Signup(AppResource):
         """
         return set()
 
-    # TODO @authentication_required - UnauthenticatedError.
+    @authentication_required
     # TODO @permission_required(permission) - AccessDeniedError.
     def post(self):
         """Treats HTTP POST requests.
@@ -128,7 +130,7 @@ class _Login(AppResource):
         """
         return set()
 
-    # TODO @unauthentication_required - AuthenticatedError.
+    @unauthentication_required
     def post(self):
         """Treats HTTP POST requests.
 
@@ -218,7 +220,7 @@ class _Logout(AppResource):
         """
         return set()
 
-    # TODO @authentication_required - UnauthenticatedError.
+    @authentication_required
     def post(self):
         """Treats HTTP POST requests.
 
@@ -236,25 +238,29 @@ class _Logout(AppResource):
 
         """
 
-        # TODO store the session in flask.g using a middleware and skip the next 10 lines.
-        session_token = request.form.get("Authentication")
+        session_token = request.form.get("token")
 
         if session_token is None:
-            raise Exception("Login required")  # TODO UnauthenticatedError.
+            raise Exception("Session token not found")  # TODO BadRequestError.
         if not isinstance(session_token, str):
             raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
         if len(session_token) != 128:
             raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
 
-        target_session = dbman.auth.get_sessions({"token": session_token})[0]
-
+        target_session = dbman.auth.get_session(session_token)
         if target_session is None:
             raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
+        if target_session != getattr(g, "session"):
+            #: Trying to logout a different session.
+            raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
+        if target_session.expire_date <= datetime.datetime.utcnow():
+            #: Trying to logout an expired session.
+            raise Exception("Invalid session")  # TODO InvalidSessionError.
 
         #: True if the logout was successful, False otherwise.
         logged_out = dbman.auth.expire_sessions(session_id=target_session.id)
 
-        return {
+        hal = {
             "_links": {
                 "self": {"href": self.get_path()},
                 "curies": [{"name": "rd", "href": "TODO/{rel}", "templated": True}],
@@ -262,3 +268,35 @@ class _Logout(AppResource):
             },
             "logged_out": logged_out,
         }
+        if logged_out:
+            hal["user_id"] = target_session.user.id
+        return hal
+
+
+def authentication():
+    try:
+        getattr(g, "session")
+        raise Exception("Inconsistent value found")
+    except AttributeError:
+        pass
+
+    session_token = request.headers.get("Authentication")
+    if session_token is None:
+        setattr(g, "session", None)
+    else:
+        if not isinstance(session_token, str):
+            raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
+        if len(session_token) != 128:
+            raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
+
+        session = dbman.auth.get_session(session_token)
+        if session is None:
+            raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
+        if session.expire_date <= datetime.datetime.utcnow():
+            #: Trying to logout an expired session.
+            raise Exception("Invalid session")  # TODO InvalidSessionError.
+
+        setattr(g, "session", session)
+
+
+BEFORE_REQUEST_FUNCS = (authentication,)

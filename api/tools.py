@@ -1,13 +1,15 @@
 import inspect
 from importlib import import_module
+from types import FunctionType
 from typing import Set, Type
 
+from flask import Flask
 from flask_restful import Api
 
 from api.abc import AppResource
 
 
-def get_app_resources(module_name) -> Set[Type[AppResource]]:
+def get_app_resources(module_name: str) -> Set[Type[AppResource]]:
     """Retrieves AppResource classes from a Module.
 
     Args:
@@ -30,6 +32,32 @@ def get_app_resources(module_name) -> Set[Type[AppResource]]:
     return app_resources
 
 
+def get_before_request_funcs(module_name: str) -> Set[FunctionType]:
+    """Retrieves a set of functions from `BEFORE_REQUEST_FUNCS`
+        attribute from a Module.
+
+    Args:
+        module_name: The name of the target Module.
+
+    Raises:
+        AssertionError: When the `BEFORE_REQUEST_FUNCS` attribute
+            includes something that is not a function.
+
+    Returns:
+        Functions included in the `BEFORE_REQUEST_FUNCS` attribute
+            of the target Module which name is `module_name`.
+
+    """
+    module = import_module(module_name)
+
+    funcs = getattr(module, "BEFORE_REQUEST_FUNCS", None)
+    if funcs is None:
+        return set()
+    for func in funcs:
+        assert isinstance(func, FunctionType)
+    return set(funcs)
+
+
 def add_app_resources(api: Api, app_resources: Set[Type[AppResource]]):
     """Adds a set of AppResource classes into an Api.
 
@@ -50,10 +78,30 @@ def add_app_resources(api: Api, app_resources: Set[Type[AppResource]]):
         api.add_resource(app_res, app_res.get_path())
 
 
-def add_app_resources_from(api: Api, module_name: str):
-    """Adds a set of AppResource classes from a Module into an Api.
+def add_before_request_funcs(app: Flask, funcs: Set[FunctionType]):
+    """Adds a set of functions into an Flask application
+        to be called before each request.
 
-    It also adds all dependencies of all added AppResource classes.
+    Args:
+        app: Instance of the target Flask application.
+        funcs: Set of functions to be added.
+
+    Raises:
+        AssertionError: When it tries to add an function that
+            was previously added in `app`.
+
+    """
+    for func in funcs:
+        assert func not in app.before_request_funcs.get(None, [])
+        app.before_request(func)
+
+
+def add_resources_from(api: Api, module_name: str):
+    """Adds a set of AppResource classes from a Module into an Api
+        and also adds a set of functions included in the `BEFORE_REQUEST_FUNCS`
+        attribute of the Module in the Api's Flask application.
+
+    It also do the same for each dependencies defined in a treated AppResource.
 
     Args:
         api: Instance of the target Api.
@@ -64,8 +112,10 @@ def add_app_resources_from(api: Api, module_name: str):
 
     """
     app_resources = get_app_resources(module_name)
+    before_request_funcs = get_before_request_funcs(module_name)
 
     add_app_resources(api, app_resources)
+    add_before_request_funcs(api.app, before_request_funcs)
 
     dep_names = set()
     for app_res in app_resources:
@@ -78,8 +128,10 @@ def add_app_resources_from(api: Api, module_name: str):
         assert dep_name not in seen_module_names
 
         app_resources = get_app_resources(dep_name)
+        before_request_funcs = get_before_request_funcs(dep_name)
 
         add_app_resources(api, app_resources)
+        add_before_request_funcs(api.app, before_request_funcs)
 
         for app_res in app_resources:
             app_res_dep_names = app_res.get_dependencies()
