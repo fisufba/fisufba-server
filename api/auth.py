@@ -90,7 +90,7 @@ class _Signup(AppResource):
 
 
 class _Login(AppResource):
-    """AppResource responsible for the create_session process of an Api.
+    """AppResource responsible for the login process of an Api.
 
     """
 
@@ -102,7 +102,7 @@ class _Login(AppResource):
             An url path.
 
         """
-        return "/accounts/create_session"
+        return "/accounts/login"
 
     @classmethod
     def get_dependencies(cls):
@@ -123,7 +123,7 @@ class _Login(AppResource):
         """Treats HTTP POST requests.
 
         If there's no running session and valid credentials are posted
-        it performs an user create_session.
+        it performs an user login.
 
         Notes:
             For better understanding, refer: http://stateless.co/hal_specification.html.
@@ -200,7 +200,6 @@ class _Logout(AppResource):
                 with information about the execution.
 
         """
-
         session_token = request.form.get("token")
 
         if session_token is None:
@@ -255,7 +254,7 @@ class _Account(AppResource):
         return set()
 
     @authentication_required
-    def get(self, user_id):
+    def get(self, user_id: int):
         """Treats HTTP GET requests.
 
         If there's a valid running session it returns the data of some User.
@@ -274,7 +273,6 @@ class _Account(AppResource):
                 with information about the execution.
 
         """
-
         user, user_group_names = getattr(g, "session").user.get_user(user_id)
 
         return {
@@ -292,7 +290,7 @@ class _Account(AppResource):
         }
 
     @authentication_required
-    def patch(self, user_id):
+    def patch(self, user_id: int):
         """Treats HTTP GET requests.
 
         If there's a valid running session it performs a partial update in the
@@ -355,10 +353,11 @@ def authentication():
         setattr(g, "session", Session(session_token))
 
 
-def unauthentication():
+def unauthentication(response):
     if not hasattr(g, "session"):
         raise Exception("Inconsistent value found")
     g.pop("session")
+    return response
 
 
 BEFORE_REQUEST_FUNCS = (authentication,)

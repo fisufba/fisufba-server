@@ -261,7 +261,7 @@ class Session:
             raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
 
         if self._session.expire_date <= datetime.datetime.utcnow():
-            #: Trying to create_session an expired session.
+            #: Trying to login an expired session.
             raise Exception("Expired session")  # TODO ExpiredSessionError.
 
         self.token = self._session.token
