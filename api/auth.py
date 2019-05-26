@@ -277,7 +277,6 @@ class _Logout(AppResource):
 
 @authentication_required
 class _Update(AppResource):
-
     @classmethod
     def get_path(cls):
         """Returns the url path of this AppResource.
@@ -324,15 +323,17 @@ class _Update(AppResource):
         # inserting user data in a dict
         user_information = {}
         if cpf is not None:
-            user_information['cpf'] = cpf
+            user_information["cpf"] = cpf
         if password is not None:
-            user_information['password'] = password
+            user_information["password"] = password
         if display_name is not None:
-            user_information['display_name'] = display_name
+            user_information["display_name"] = display_name
         if email is not None:
-            user_information['email'] = email
+            user_information["email"] = email
 
-        user, updated = dbman.auth.update_user(user_information=user_information, user_id=user_id)
+        user, updated = dbman.auth.update_user(
+            user_information=user_information, user_id=user_id
+        )
 
         hal = {"_links": {"self": {"href": self.get_path()}}, "updated": updated}
         if updated:
@@ -342,7 +343,6 @@ class _Update(AppResource):
 
 # @authentication_required
 class _Show(AppResource):
-
     @classmethod
     def get_path(cls):
         """Returns the url path of this AppResource.
@@ -380,6 +380,7 @@ class _Show(AppResource):
             hal["user_id"] = user.id
         return hal
 
+
 def authentication():
     try:
         getattr(g, "session")
@@ -405,6 +406,7 @@ def authentication():
 
         setattr(g, "session", session)
 
+
 def check_permissions(required_permissions: list):
 
     user = g.session.user
@@ -422,6 +424,7 @@ def check_permissions(required_permissions: list):
     for permission in required_permissions:
         print(dbman.auth.get_permission(permission))
         if dbman.auth.get_permission(permission) not in user_permissions:
-            raise Exception("User doesn't have permission") # TODO AccessDeniedError.
+            raise Exception("User doesn't have permission")  # TODO AccessDeniedError.
+
 
 BEFORE_REQUEST_FUNCS = (authentication,)
