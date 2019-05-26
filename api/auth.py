@@ -275,8 +275,11 @@ class _Logout(AppResource):
         return hal
 
 
-@authentication_required
-class _Update(AppResource):
+class _Account(AppResource):
+    """AppResource responsible for read and update user information.
+
+    """
+
     @classmethod
     def get_path(cls):
         """Returns the url path of this AppResource.
@@ -285,7 +288,7 @@ class _Update(AppResource):
             An url path.
 
         """
-        return "/accounts/update/<string:user_id>"
+        return "/account/<int:user_id>"
 
     @classmethod
     def get_dependencies(cls):
@@ -301,7 +304,57 @@ class _Update(AppResource):
         """
         return set()
 
+    def get(self, user_id):
+        """Treats HTTP GET requests.
+
+        If there's a valid running session it returns the data of some User.
+
+        Notes:
+            For better understanding, refer: http://stateless.co/hal_specification.html.
+
+        Args:
+            user_id: The target id of the User.
+
+        Raises:
+            TODO.
+
+        Returns:
+            Dict object following the HAL format
+                with information about the execution.
+
+        """
+
+        # check_permissions(["read_attendant_data", "read_physiotherapist_data", "read_patient_data"])
+
+        user = dbman.auth.get_user(user_id=user_id)
+
+        found = user is not None
+
+        hal = {"_links": {"self": {"href": self.get_path()}}, "found": found}
+        if found:
+            hal["user_id"] = user.id
+        return hal
+
     def patch(self, user_id):
+        """Treats HTTP GET requests.
+
+        If there's a valid running session it performs a partial update in the
+        data of the User that has id equals `user_id`.
+
+        Notes:
+            For better understanding, refer: http://stateless.co/hal_specification.html.
+
+        Args:
+            user_id: The target id of the User.
+
+        Raises:
+            TODO.
+
+        Returns:
+            Dict object following the HAL format
+                with information about the execution.
+
+        """
 
         # check_permissions(["change_attendant_data", "change_physiotherapist_data", "change_patient_data"])
 
@@ -338,46 +391,6 @@ class _Update(AppResource):
         hal = {"_links": {"self": {"href": self.get_path()}}, "updated": updated}
         if updated:
             hal["user_id"] = user_id
-        return hal
-
-
-# @authentication_required
-class _Show(AppResource):
-    @classmethod
-    def get_path(cls):
-        """Returns the url path of this AppResource.
-
-        Returns:
-            An url path.
-
-        """
-        return "/accounts/show/<string:user_id>"
-
-    @classmethod
-    def get_dependencies(cls):
-        """Returns the dependencies of this AppResource.
-
-        Notes:
-            If there's no dependency this must return an empty set.
-
-        Returns:
-            A set of module names that contains AppResource
-                classes used by this AppResource.
-
-        """
-        return set()
-
-    def get(self, user_id):
-
-        # check_permissions(["read_attendant_data", "read_physiotherapist_data", "read_patient_data"])
-
-        user = dbman.auth.get_user(user_id=user_id)
-
-        found = user is not None
-
-        hal = {"_links": {"self": {"href": self.get_path()}}, "found": found}
-        if found:
-            hal["user_id"] = user.id
         return hal
 
 

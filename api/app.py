@@ -51,7 +51,6 @@ class _Index(AppResource):
                 "auth:signup": {"href": url_for("_signup"), "templated": True},
                 "auth:login": {"href": url_for("_login"), "templated": True},
                 "auth:logout": {"href": url_for("_logout"), "templated": True},
-                "auth:update": {"href": url_for("_update"), "templated": True},
-                "auth:show": {"href": url_for("_show"), "templated": True},
+                "auth:account": {"href": url_for("_account"), "templated": True},
             }
         }
