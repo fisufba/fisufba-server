@@ -1,13 +1,9 @@
-import secrets
-import datetime
-
-import bcrypt
 from flask import g, request, url_for
 
+import utils
 from api.abc import AppResource
 from api.abc import authentication_required, unauthentication_required
-from db.manager import manager as dbman
-from utils.validation import is_valid_cpf, is_valid_email
+from db.wrapper.auth import User, Session
 
 
 class _Signup(AppResource):
@@ -62,7 +58,7 @@ class _Signup(AppResource):
         password = request.form.get("password")
         display_name = request.form.get("display_name")
         email = request.form.get("email")
-        group_name = request.form.get("group")
+        group_names = request.form.get("group")
 
         # checking whether the variables are strings
         if not isinstance(cpf, str):
@@ -73,43 +69,28 @@ class _Signup(AppResource):
             raise Exception("Invalid display_name")  # TODO InvaliDisplayNameError.
         if email is not None and not isinstance(email, str):
             raise Exception("Invalid email")  # TODO InvalidEmailError.
-        if not isinstance(group_name, str):
-            raise Exception("Invalid group_name")  # TODO InvalidGroupNameError.
 
-        if not is_valid_cpf(cpf):
-            raise Exception("Invalid cpf")  # TODO InvalidCPFError.
+        if not isinstance(group_names, list):
+            raise Exception("Invalid group_names")  # TODO InvalidGroupNamesError.
+        if len(group_names) != len(set(group_names)):
+            raise Exception("Duplicated group_name")  # TODO DuplicatedGroupNameError.
+        for group_name in group_names:
+            if not isinstance(group_name, str):
+                raise Exception("Invalid group_name")  # TODO InvalidGroupNameError.
 
-        if email is not None and not is_valid_email(email):
-            raise Exception("Invalid email")  # TODO InvalidEmailError.
-
-        if not dbman.auth.check_user_permission(
-            getattr(g, "session").user, f"create_{group_name}"
-        ):
-            raise Exception("Forbidden")  # TODO ForbiddenError.
-
-        new_user, created = dbman.auth.create_user(
-            user_information={
-                "cpf": cpf.replace(".", "").replace("-", ""),
-                "password": bcrypt.hashpw(
-                    password.encode("utf-8"), bcrypt.gensalt()
-                ).decode("utf-8"),
-                "display_name": display_name,
-                "email": email,
-                "group_name": group_name,
-            }
+        user_id = getattr(g, "session").user.create_user(
+            cpf=cpf,
+            password=password,
+            display_name=display_name,
+            email=email,
+            group_names=set(group_names),
         )
 
-        if not created:
-            raise Exception("User wasn't stored")  # TODO NotCreatedError.
-
-        hal = {"_links": {"self": {"href": self.get_path()}}, "created": created}
-        if created:
-            hal["user_id"] = new_user.id
-        return hal
+        return {"_links": {"self": {"href": self.get_path()}}, "user_id": user_id}
 
 
 class _Login(AppResource):
-    """AppResource responsible for the login process of an Api.
+    """AppResource responsible for the create_session process of an Api.
 
     """
 
@@ -121,7 +102,7 @@ class _Login(AppResource):
             An url path.
 
         """
-        return "/accounts/login"
+        return "/accounts/create_session"
 
     @classmethod
     def get_dependencies(cls):
@@ -142,7 +123,7 @@ class _Login(AppResource):
         """Treats HTTP POST requests.
 
         If there's no running session and valid credentials are posted
-        it performs an user login.
+        it performs an user create_session.
 
         Notes:
             For better understanding, refer: http://stateless.co/hal_specification.html.
@@ -163,39 +144,14 @@ class _Login(AppResource):
         if not isinstance(password, str):
             raise Exception("Invalid password")  # TODO InvalidPasswordError.
 
-        if not is_valid_cpf(cpf):
-            raise Exception("Invalid cpf")  # TODO InvalidCPFError.
+        target_user = User(cpf, password)
+        session_token = target_user.create_session()
 
-        target_user = dbman.auth.get_user(
-            {"cpf": cpf.replace(".", "").replace("-", "")}
-        )
-        if target_user is None:
-            raise Exception("Invalid cpf")  # TODO InvalidCPFError.
-
-        if not bcrypt.checkpw(
-            password.encode("utf-8"), target_user.password.encode("utf-8")
-        ):
-            raise Exception("Invalid password")  # TODO InvalidPasswordError.
-
-        session, session_token = None, None
-        while session_token is None:
-            session, created = dbman.auth.create_session(
-                {"user": target_user, "token": secrets.token_hex(64)}
-            )
-            if created:
-                session_token = session.token
-
-        #: True if the login was successful, False otherwise.
-        logged_in = dbman.auth.update_user_last_login(user_id=target_user.id)
-
-        if not logged_in:
-            dbman.auth.expire_sessions(session_id=session.id)
-
-        hal = {"_links": {"self": {"href": self.get_path()}}, "logged_in": logged_in}
-        if logged_in:
-            hal["user_id"] = target_user.id
-            hal["token"] = session_token
-        return hal
+        return {
+            "_links": {"self": {"href": self.get_path()}},
+            "token": session_token,
+            "user_id": target_user.id,
+        }
 
 
 class _Logout(AppResource):
@@ -251,33 +207,22 @@ class _Logout(AppResource):
             raise Exception("Session token not found")  # TODO BadRequestError.
         if not isinstance(session_token, str):
             raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
-        if len(session_token) != 128:
-            raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
 
-        target_session = dbman.auth.get_session(session_token)
-        if target_session is None:
-            raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
+        target_session = Session(session_token)
         if target_session != getattr(g, "session"):
             #: Trying to logout a different session.
-            raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
-        if target_session.expire_date <= datetime.datetime.utcnow():
-            #: Trying to logout an expired session.
             raise Exception("Invalid session")  # TODO InvalidSessionError.
 
-        #: True if the logout was successful, False otherwise.
-        logged_out = dbman.auth.expire_sessions(session_id=target_session.id)
+        target_session.expire()
 
-        hal = {
+        return {
             "_links": {
                 "self": {"href": self.get_path()},
                 "curies": [{"name": "rd", "href": "TODO/{rel}", "templated": True}],
                 "rd:index": {"href": url_for("_index"), "templated": True},
             },
-            "logged_out": logged_out,
+            "user_id": target_session.user.id,
         }
-        if logged_out:
-            hal["user_id"] = target_session.user.id
-        return hal
 
 
 class _Account(AppResource):
@@ -329,28 +274,22 @@ class _Account(AppResource):
                 with information about the execution.
 
         """
-        for group in dbman.auth.get_user_groups(user_id):
-            if not dbman.auth.check_user_permission(
-                getattr(g, "session").user, f"read_{group.name}_data"
-            ):
-                raise Exception("Forbidden")  # TODO ForbiddenError.
 
-        user = dbman.auth.get_user(user_id=user_id)
+        user, user_group_names = getattr(g, "session").user.get_user(user_id)
 
-        found = user is not None
-
-        hal = {"_links": {"self": {"href": self.get_path()}}, "found": found}
-        if found:
-            hal["user"] = dict(
+        return {
+            "_links": {"self": {"href": self.get_path()}},
+            "user": dict(
                 id=user.id,
-                cpf=user.cpf,
+                cpf=utils.mask_cpf(user.cpf),
                 display_name=user.display_name,
                 email=user.email,
                 is_active=user.is_active,
                 is_verified=user.is_verified,
                 last_login=user.last_login,
-            )
-        return hal
+                groups=list(user_group_names),
+            ),
+        }
 
     @authentication_required
     def patch(self, user_id):
@@ -373,49 +312,34 @@ class _Account(AppResource):
                 with information about the execution.
 
         """
-        for group in dbman.auth.get_user_groups(user_id):
-            if not dbman.auth.check_user_permission(
-                getattr(g, "session").user, f"read_{group.name}_data"
-            ):
-                raise Exception("Forbidden")  # TODO ForbiddenError.
-
-        user_information = {}
+        kwargs = {}
         if "cpf" in request.form:
-            cpf = request.form.get("cpf")
-            if cpf is not None and not isinstance(cpf, str):
+            cpf = request.form["cpf"]
+            if not isinstance(cpf, str):
                 raise Exception("Invalid cpf")  # TODO InvalidCPFError.
-            if not is_valid_cpf(cpf):
-                raise Exception("Invalid cpf")  # TODO InvalidCPFError.
-            user_information["cpf"] = cpf
+            kwargs["cpf"] = cpf
 
         if "password" in request.form:
-            password = request.form.get("password")
-            if password is not None and not isinstance(password, str):
+            password = request.form["password"]
+            if not isinstance(password, str):
                 raise Exception("Invalid password")  # TODO InvalidPasswordError.
-            user_information["password"] = password
+            kwargs["password"] = password
 
         if "display_name" in request.form:
-            display_name = request.form.get("display_name")
-            if display_name is not None and not isinstance(display_name, str):
+            display_name = request.form["display_name"]
+            if not isinstance(display_name, str):
                 raise Exception("Invalid display_name")  # TODO InvaliDisplayNameError.
-            user_information["display_name"] = display_name
+            kwargs["display_name"] = display_name
 
         if "email" in request.form:
-            email = request.form.get("email")
+            email = request.form["email"]
             if email is not None and not isinstance(email, str):
                 raise Exception("Invalid email")  # TODO InvalidEmailError.
-            if email is not None and not is_valid_email(email):
-                raise Exception("Invalid email")  # TODO InvalidEmailError.
-            user_information["email"] = email
+            kwargs["email"] = email
 
-        updated = dbman.auth.update_user_information(
-            user_information=user_information, user_id=user_id
-        )
+        getattr(g, "session").user.update_user(user_id, **kwargs)
 
-        hal = {"_links": {"self": {"href": self.get_path()}}, "updated": updated}
-        if updated:
-            hal["user_id"] = user_id
-        return hal
+        return {"_links": {"self": {"href": self.get_path()}}, "user_id": user_id}
 
 
 def authentication():
@@ -428,23 +352,12 @@ def authentication():
     else:
         if not isinstance(session_token, str):
             raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
-        if len(session_token) != 128:
-            raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
-
-        session = dbman.auth.get_session(session_token)
-        if session is None:
-            raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
-        if session.expire_date <= datetime.datetime.utcnow():
-            #: Trying to logout an expired session.
-            raise Exception("Invalid session")  # TODO InvalidSessionError.
-
-        setattr(g, "session", session)
+        setattr(g, "session", Session(session_token))
 
 
 def unauthentication():
     if not hasattr(g, "session"):
         raise Exception("Inconsistent value found")
-
     g.pop("session")
 
 
