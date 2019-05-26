@@ -50,9 +50,35 @@ def get_before_request_funcs(module_name: str) -> Set[FunctionType]:
     """
     module = import_module(module_name)
 
-    funcs = getattr(module, "BEFORE_REQUEST_FUNCS", None)
-    if funcs is None:
+    if not hasattr(module, "BEFORE_REQUEST_FUNCS"):
         return set()
+    funcs = getattr(module, "BEFORE_REQUEST_FUNCS")
+    for func in funcs:
+        assert isinstance(func, FunctionType)
+    return set(funcs)
+
+
+def get_after_request_funcs(module_name: str) -> Set[FunctionType]:
+    """Retrieves a set of functions from `AFTER_REQUEST_FUNCS`
+        attribute from a Module.
+
+    Args:
+        module_name: The name of the target Module.
+
+    Raises:
+        AssertionError: When the `AFTER_REQUEST_FUNCS` attribute
+            includes something that is not a function.
+
+    Returns:
+        Functions included in the `AFTER_REQUEST_FUNCS` attribute
+            of the target Module which name is `module_name`.
+
+    """
+    module = import_module(module_name)
+
+    if not hasattr(module, "AFTER_REQUEST_FUNCS"):
+        return set()
+    funcs = getattr(module, "AFTER_REQUEST_FUNCS")
     for func in funcs:
         assert isinstance(func, FunctionType)
     return set(funcs)
@@ -96,10 +122,29 @@ def add_before_request_funcs(app: Flask, funcs: Set[FunctionType]):
         app.before_request(func)
 
 
+def add_after_request_funcs(app: Flask, funcs: Set[FunctionType]):
+    """Adds a set of functions into an Flask application
+        to be called after each request.
+
+    Args:
+        app: Instance of the target Flask application.
+        funcs: Set of functions to be added.
+
+    Raises:
+        AssertionError: When it tries to add an function that
+            was previously added in `app`.
+
+    """
+    for func in funcs:
+        assert func not in app.after_request_funcs.get(None, [])
+        app.after_request(func)
+
+
 def add_resources_from(api: Api, module_name: str):
     """Adds a set of AppResource classes from a Module into an Api
         and also adds a set of functions included in the `BEFORE_REQUEST_FUNCS`
-        attribute of the Module in the Api's Flask application.
+        and `AFTER_REQUEST_FUNCS` attribute of the Module
+        into the Api's Flask application.
 
     It also do the same for each dependencies defined in a treated AppResource.
 
@@ -113,9 +158,11 @@ def add_resources_from(api: Api, module_name: str):
     """
     app_resources = get_app_resources(module_name)
     before_request_funcs = get_before_request_funcs(module_name)
+    after_request_funcs = get_after_request_funcs(module_name)
 
     add_app_resources(api, app_resources)
     add_before_request_funcs(api.app, before_request_funcs)
+    add_after_request_funcs(api.app, after_request_funcs)
 
     dep_names = set()
     for app_res in app_resources:
@@ -129,9 +176,11 @@ def add_resources_from(api: Api, module_name: str):
 
         app_resources = get_app_resources(dep_name)
         before_request_funcs = get_before_request_funcs(dep_name)
+        after_request_funcs = get_after_request_funcs(dep_name)
 
         add_app_resources(api, app_resources)
         add_before_request_funcs(api.app, before_request_funcs)
+        add_after_request_funcs(api.app, after_request_funcs)
 
         for app_res in app_resources:
             app_res_dep_names = app_res.get_dependencies()

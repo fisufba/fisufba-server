@@ -40,7 +40,6 @@ class _Signup(AppResource):
         return set()
 
     @authentication_required
-    # TODO @permission_required(permission) - AccessDeniedError.
     def post(self):
         """Treats HTTP POST requests.
 
@@ -59,13 +58,11 @@ class _Signup(AppResource):
                 with information about the execution.
 
         """
-
-        # check_permissions(["create_attendant", "create_physiotherapist", "create_patient"])
-
         cpf = request.form.get("cpf")
         password = request.form.get("password")
         display_name = request.form.get("display_name")
         email = request.form.get("email")
+        group_name = request.form.get("group")
 
         # checking whether the variables are strings
         if not isinstance(cpf, str):
@@ -76,12 +73,19 @@ class _Signup(AppResource):
             raise Exception("Invalid display_name")  # TODO InvaliDisplayNameError.
         if email is not None and not isinstance(email, str):
             raise Exception("Invalid email")  # TODO InvalidEmailError.
+        if not isinstance(group_name, str):
+            raise Exception("Invalid group_name")  # TODO InvalidGroupNameError.
 
         if not is_valid_cpf(cpf):
             raise Exception("Invalid cpf")  # TODO InvalidCPFError.
 
         if email is not None and not is_valid_email(email):
             raise Exception("Invalid email")  # TODO InvalidEmailError.
+
+        if not dbman.auth.check_user_permission(
+            getattr(g, "session").user, f"create_{group_name}"
+        ):
+            raise Exception("Forbidden")  # TODO ForbiddenError.
 
         new_user, created = dbman.auth.create_user(
             user_information={
@@ -91,6 +95,7 @@ class _Signup(AppResource):
                 ).decode("utf-8"),
                 "display_name": display_name,
                 "email": email,
+                "group_name": group_name,
             }
         )
 
@@ -304,6 +309,7 @@ class _Account(AppResource):
         """
         return set()
 
+    @authentication_required
     def get(self, user_id):
         """Treats HTTP GET requests.
 
@@ -323,8 +329,11 @@ class _Account(AppResource):
                 with information about the execution.
 
         """
-
-        # check_permissions(["read_attendant_data", "read_physiotherapist_data", "read_patient_data"])
+        for group in dbman.auth.get_user_groups(user_id):
+            if not dbman.auth.check_user_permission(
+                getattr(g, "session").user, f"read_{group.name}_data"
+            ):
+                raise Exception("Forbidden")  # TODO ForbiddenError.
 
         user = dbman.auth.get_user(user_id=user_id)
 
@@ -332,9 +341,18 @@ class _Account(AppResource):
 
         hal = {"_links": {"self": {"href": self.get_path()}}, "found": found}
         if found:
-            hal["user_id"] = user.id
+            hal["user"] = dict(
+                id=user.id,
+                cpf=user.cpf,
+                display_name=user.display_name,
+                email=user.email,
+                is_active=user.is_active,
+                is_verified=user.is_verified,
+                last_login=user.last_login,
+            )
         return hal
 
+    @authentication_required
     def patch(self, user_id):
         """Treats HTTP GET requests.
 
@@ -355,36 +373,42 @@ class _Account(AppResource):
                 with information about the execution.
 
         """
+        for group in dbman.auth.get_user_groups(user_id):
+            if not dbman.auth.check_user_permission(
+                getattr(g, "session").user, f"read_{group.name}_data"
+            ):
+                raise Exception("Forbidden")  # TODO ForbiddenError.
 
-        # check_permissions(["change_attendant_data", "change_physiotherapist_data", "change_patient_data"])
-
-        cpf = request.form.get("cpf")
-        password = request.form.get("password")
-        display_name = request.form.get("display_name")
-        email = request.form.get("email")
-
-        # checking whether the variables are strings
-        if cpf is not None and not isinstance(cpf, str):
-            raise Exception("Invalid cpf")  # TODO InvalidCPFError.
-        if password is not None and not isinstance(password, str):
-            raise Exception("Invalid password")  # TODO InvalidPasswordError.
-        if display_name is not None and not isinstance(display_name, str):
-            raise Exception("Invalid display_name")  # TODO InvaliDisplayNameError.
-        if email is not None and not isinstance(email, str):
-            raise Exception("Invalid email")  # TODO InvalidEmailError.
-
-        # inserting user data in a dict
         user_information = {}
-        if cpf is not None:
+        if "cpf" in request.form:
+            cpf = request.form.get("cpf")
+            if cpf is not None and not isinstance(cpf, str):
+                raise Exception("Invalid cpf")  # TODO InvalidCPFError.
+            if not is_valid_cpf(cpf):
+                raise Exception("Invalid cpf")  # TODO InvalidCPFError.
             user_information["cpf"] = cpf
-        if password is not None:
+
+        if "password" in request.form:
+            password = request.form.get("password")
+            if password is not None and not isinstance(password, str):
+                raise Exception("Invalid password")  # TODO InvalidPasswordError.
             user_information["password"] = password
-        if display_name is not None:
+
+        if "display_name" in request.form:
+            display_name = request.form.get("display_name")
+            if display_name is not None and not isinstance(display_name, str):
+                raise Exception("Invalid display_name")  # TODO InvaliDisplayNameError.
             user_information["display_name"] = display_name
-        if email is not None:
+
+        if "email" in request.form:
+            email = request.form.get("email")
+            if email is not None and not isinstance(email, str):
+                raise Exception("Invalid email")  # TODO InvalidEmailError.
+            if email is not None and not is_valid_email(email):
+                raise Exception("Invalid email")  # TODO InvalidEmailError.
             user_information["email"] = email
 
-        user, updated = dbman.auth.update_user(
+        updated = dbman.auth.update_user_information(
             user_information=user_information, user_id=user_id
         )
 
@@ -395,11 +419,8 @@ class _Account(AppResource):
 
 
 def authentication():
-    try:
-        getattr(g, "session")
+    if hasattr(g, "session"):
         raise Exception("Inconsistent value found")
-    except AttributeError:
-        pass
 
     session_token = request.headers.get("Authentication")
     if session_token is None:
@@ -420,24 +441,12 @@ def authentication():
         setattr(g, "session", session)
 
 
-def check_permissions(required_permissions: list):
+def unauthentication():
+    if not hasattr(g, "session"):
+        raise Exception("Inconsistent value found")
 
-    user = g.session.user
-    user_permissions = dbman.auth.get_user_permissions(user)
-    if user_permissions is None:
-        raise Exception("User doesn't have permission")
-
-    user_permissions = list(user_permissions)
-    for index, item in enumerate(user_permissions):
-        user_permissions[index] = user_permissions[index].permission
-
-    print(required_permissions)
-    print(user_permissions)
-
-    for permission in required_permissions:
-        print(dbman.auth.get_permission(permission))
-        if dbman.auth.get_permission(permission) not in user_permissions:
-            raise Exception("User doesn't have permission")  # TODO AccessDeniedError.
+    g.pop("session")
 
 
 BEFORE_REQUEST_FUNCS = (authentication,)
+AFTER_REQUEST_FUNCS = (unauthentication,)

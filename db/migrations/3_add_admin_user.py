@@ -13,12 +13,10 @@ def do_migration():
             ).decode("utf-8"),
             "display_name": utils.env.get("admin", "display_name"),
             "email": utils.env.get("admin", "email"),
+            "group_name": "admin",
         }
     )
     assert created
-    admin_group = dbman.auth.get_group("admin")
-    assert admin_group is not None
-    dbman.auth.add_user_to_group(admin, admin_group)
 
 
 if __name__ == "__main__":

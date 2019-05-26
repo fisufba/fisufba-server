@@ -82,11 +82,13 @@ class Auth:
         assert "cpf" in user_information
         assert "password" in user_information
         assert "display_name" in user_information
+        assert "group_name" in user_information
 
         cpf = user_information["cpf"]
         password = user_information["password"]
         display_name = user_information["display_name"]
         email = user_information.get("email")
+        group_name = user_information["group_name"]
 
         #: cpf validation.
         if not is_valid_cpf(cpf, with_mask=False):
@@ -98,15 +100,21 @@ class Auth:
 
         #: other validation will occur by the database (e.g. password length).
 
+        group = self.get_group(group_name)
+
         try:
-            return (
-                User.create(
-                    cpf=cpf, password=password, display_name=display_name, email=email
-                ),
-                True,
+            user = User.create(
+                cpf=cpf, password=password, display_name=display_name, email=email
             )
+            self.add_user_to_group(user, group)
+            return (user, True)
         except peewee.IntegrityError:
             return None, False
+
+    def update_user_information(self, user_iformation: dict, user_id: int):
+        query = User.update(**user_iformation).where(User.id == user_id)
+        result = query.execute()
+        return result != 0
 
     def update_user_last_login(
         self, user_information: dict = None, user_id: int = None
@@ -242,35 +250,20 @@ class Auth:
         except peewee.IntegrityError:
             return None, False
 
-    def get_user_groups(self, user):
+    def get_user_groups(self, user_id):
         try:
-            query = UserGroups.select().where(UserGroups.user == user)
+            query = UserGroups.select().where(UserGroups.user == user_id)
             return query.execute()
         except UserGroups.DoesNotExist:
             return None
 
-    def get_permission(self, permission_codename):
+    def check_user_permission(self, user, permission_codename):
         try:
-            return Permission.get(codename=permission_codename)
-        except Permission.DoesNotExist:
-            return None
-
-    def get_group_permissions(self, group):
-        try:
-            query = GroupPermissions.select().where(GroupPermissions.group == group)
-            return query.execute()
+            GroupPermissions.select().join(Permission).switch(GroupPermissions).join(
+                UserGroups
+            ).switch(GroupPermissions).where(
+                UserGroups.user == user & Permission.codename == permission_codename
+            ).execute()
+            return True
         except GroupPermissions.DoesNotExist:
-            return None
-
-    def get_user_permissions(self, user):
-        user_permissions = set()
-        user_groups = self.get_user_groups(user)
-        if user_groups is None:
-            return None
-        for group in user_groups:
-            group_permissions = self.get_group_permissions(group)
-            if group_permissions is not None:
-                user_permissions.update(set(group_permissions))
-        if len(user_permissions) == 0:
-            return None
-        return user_permissions
+            return False
