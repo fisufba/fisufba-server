@@ -4,6 +4,11 @@ from db.models.auth import Permission
 def do_migration():
     #: Creations.
     Permission.create(
+        name="Create admin",
+        codename="create_admin",
+        description="Allows the creation of an admin",
+    )
+    Permission.create(
         name="Create attendant",
         codename="create_attendant",
         description="Allows the creation of an attendant",
@@ -21,6 +26,11 @@ def do_migration():
 
     #: Changes.
     Permission.create(
+        name="Change admin data",
+        codename="change_admin_data",
+        description="Allows changes to admin data",
+    )
+    Permission.create(
         name="Change attendant data",
         codename="change_attendant_data",
         description="Allows changes to attendant data",
@@ -37,6 +47,11 @@ def do_migration():
     )
 
     #: Readings
+    Permission.create(
+        name="Read admin data",
+        codename="read_admin_data",
+        description="Allows read in admin data",
+    )
     Permission.create(
         name="Read attendant data",
         codename="read_attendant_data",

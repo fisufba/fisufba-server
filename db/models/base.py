@@ -3,7 +3,7 @@ from peewee import Model, PostgresqlDatabase
 import utils
 
 
-DB = PostgresqlDatabase(
+db = PostgresqlDatabase(
     database=utils.env.get("database", "database"),
     user=utils.env.get("database", "role"),
     password=utils.env.get("database", "password"),
@@ -14,4 +14,4 @@ DB = PostgresqlDatabase(
 
 class _BaseModel(Model):
     class Meta:
-        database = DB
+        database = db

@@ -1,5 +1,7 @@
 import re
 
+from utils.utils import unmask_cpf
+
 
 def is_valid_email(email: str) -> bool:
     """Checks if a string is a valid email.
@@ -15,26 +17,26 @@ def is_valid_email(email: str) -> bool:
     return email_re.match(email) is not None
 
 
-def is_valid_cpf(cpf: str, with_mask: bool = True) -> bool:
+def is_valid_cpf(cpf: str) -> bool:
     """Checks if a string is a valid CPF.
+
+    Notes:
+        The `cpf` must be masked (xxx.xxx.xxx-xx).
 
     Args:
         cpf: Possible CPF to be validated.
-        with_mask: True when the CPF contains a mask (xxx.xxx.xxx-xx).
-            False otherwise (xxxxxxxxxxx).
 
     Returns:
         True when `cpf` is a valid CPF, False otherwise.
 
     """
-    if with_mask:
-        cpf_re = re.compile(r"^\d{3}\.\d{3}\.\d{3}-\d{2}$")
-        if cpf_re.match(cpf) is None:
-            return False
+    cpf_re = re.compile(r"^\d{3}\.\d{3}\.\d{3}-\d{2}$")
+    if cpf_re.match(cpf) is None:
+        return False
 
-        assert len(cpf) == 14  #: This never may fail.
+    assert len(cpf) == 14  #: This never may fail.
 
-        cpf = cpf.replace(".", "").replace("-", "")
+    cpf = unmask_cpf(cpf)
 
     code, vd = cpf[:9], cpf[9:]
 
