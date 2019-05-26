@@ -58,7 +58,7 @@ class _Signup(AppResource):
         password = request.form.get("password")
         display_name = request.form.get("display_name")
         email = request.form.get("email")
-        group_names = request.form.get("group")
+        user_group_names = request.form.get("user_group_names")
 
         # checking whether the variables are strings
         if not isinstance(cpf, str):
@@ -70,23 +70,29 @@ class _Signup(AppResource):
         if email is not None and not isinstance(email, str):
             raise Exception("Invalid email")  # TODO InvalidEmailError.
 
-        if not isinstance(group_names, list):
-            raise Exception("Invalid group_names")  # TODO InvalidGroupNamesError.
-        if len(group_names) != len(set(group_names)):
-            raise Exception("Duplicated group_name")  # TODO DuplicatedGroupNameError.
-        for group_name in group_names:
+        if not isinstance(user_group_names, str):
+            raise Exception("Invalid user_group_names")  # TODO InvalidGroupNamesError.
+        user_group_names = user_group_names.split(",")
+
+        if len(user_group_names) != len(set(user_group_names)):
+            raise Exception(
+                "Duplicated user_group_names"
+            )  # TODO DuplicatedGroupNameError.
+        for group_name in user_group_names:
             if not isinstance(group_name, str):
-                raise Exception("Invalid group_name")  # TODO InvalidGroupNameError.
+                raise Exception(
+                    "Invalid user_group_names"
+                )  # TODO InvalidGroupNameError.
 
         user_id = getattr(g, "session").user.create_user(
             cpf=cpf,
             password=password,
             display_name=display_name,
             email=email,
-            group_names=set(group_names),
+            user_group_names=set(user_group_names),
         )
 
-        return {"_links": {"self": {"href": self.get_path()}}, "user_id": user_id}
+        return {"_links": {"self": {"href": url_for("_signup")}}, "user_id": user_id}
 
 
 class _Login(AppResource):
@@ -148,7 +154,7 @@ class _Login(AppResource):
         session_token = target_user.create_session()
 
         return {
-            "_links": {"self": {"href": self.get_path()}},
+            "_links": {"self": {"href": url_for("_login")}},
             "token": session_token,
             "user_id": target_user.id,
         }
@@ -215,11 +221,7 @@ class _Logout(AppResource):
         target_session.expire()
 
         return {
-            "_links": {
-                "self": {"href": self.get_path()},
-                "curies": [{"name": "rd", "href": "TODO/{rel}", "templated": True}],
-                "rd:index": {"href": url_for("_index"), "templated": True},
-            },
+            "_links": {"self": {"href": url_for("_logout")}},
             "user_id": target_session.user.id,
         }
 
@@ -276,7 +278,7 @@ class _Account(AppResource):
         user, user_group_names = getattr(g, "session").user.get_user(user_id)
 
         return {
-            "_links": {"self": {"href": self.get_path()}},
+            "_links": {"self": {"href": url_for("_account", user_id=user_id)}},
             "user": dict(
                 id=user.id,
                 cpf=utils.mask_cpf(user.cpf),
@@ -284,7 +286,9 @@ class _Account(AppResource):
                 email=user.email,
                 is_active=user.is_active,
                 is_verified=user.is_verified,
-                last_login=user.last_login,
+                last_login=None
+                if user.last_login is None
+                else user.last_login.isoformat(),
                 groups=list(user_group_names),
             ),
         }
@@ -337,7 +341,10 @@ class _Account(AppResource):
 
         getattr(g, "session").user.update_user(user_id, **kwargs)
 
-        return {"_links": {"self": {"href": self.get_path()}}, "user_id": user_id}
+        return {
+            "_links": {"self": {"href": url_for("_account", user_id=user_id)}},
+            "user_id": user_id,
+        }
 
 
 def authentication():

@@ -46,7 +46,7 @@ class _Index(AppResource):
         """
         return {
             "_links": {
-                "self": {"href": self.get_path()},
+                "self": {"href": url_for("_index")},
                 "curies": [{"name": "auth", "href": "TODO/{rel}", "templated": True}],
                 "auth:signup": {"href": url_for("_signup"), "templated": True},
                 "auth:login": {"href": url_for("_login"), "templated": True},

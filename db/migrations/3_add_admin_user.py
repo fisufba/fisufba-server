@@ -30,6 +30,7 @@ def do_migration():
         ),
         display_name=display_name,
         email=email,
+        is_verified=None if email is None else False,
     )
     user_group = auth.Group.get(name="admin")
     auth.UserGroups.create(user=user, group=user_group)

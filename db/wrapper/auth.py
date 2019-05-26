@@ -62,14 +62,16 @@ class User:
         self.email = self._user.email
 
         self._group_names = set(
-            auth.Group.select(auth.Group.name)
+            group.name
+            for group in auth.Group.select(auth.Group.name)
             .join(auth.UserGroups)
             .switch(auth.Group)
             .where(auth.UserGroups.user == self._user)
         )
 
         self._permissions = set(
-            auth.Permission.select(auth.Permission.codename)
+            permission.codename
+            for permission in auth.Permission.select(auth.Permission.codename)
             .join(auth.GroupPermissions)
             .join(auth.Group)
             .switch(auth.Permission)
@@ -130,6 +132,10 @@ class User:
         if email is not None and not utils.is_valid_email(email):
             raise Exception("Invalid email")  # TODO InvalidEmailError.
 
+        user_groups = auth.Group.select().where(auth.Group.name.in_(user_group_names))
+        if len(user_groups) != len(user_group_names):
+            raise Exception("Invalid group_names")  # TODO InvalidGroupNamesError.
+
         required_permissions = set(
             f"create_{group_name}" for group_name in user_group_names
         )
@@ -144,19 +150,17 @@ class User:
                 ).decode("utf-8"),
                 display_name=display_name,
                 email=email,
+                is_verified=None if email is None else False,
             )
         except peewee.IntegrityError:
             raise Exception("User already exists")  # TODO NotCreatedError.
 
-        user_groups = auth.Group.select().where(auth.Group.name.in_(user_group_names))
         try:
-            if len(user_groups) != len(user_group_names):
-                raise Exception("Invalid group_names")  # TODO InvalidGroupNamesError.
             for group in user_groups:
                 auth.UserGroups.create(user=user, group=group)
-        except Exception:
+        except peewee.IntegrityError:
             auth.User.delete().where(auth.User.id == user.id)
-            raise
+            raise Exception("Duplicated user_group relation")  # TODO NotCreatedError.
 
         return user.id
 
@@ -171,7 +175,8 @@ class User:
 
         """
         user_group_names = set(
-            auth.Group.select(auth.Group.name)
+            group.name
+            for group in auth.Group.select(auth.Group.name)
             .join(auth.UserGroups)
             .join(auth.User)
             .switch(auth.Group)
@@ -202,7 +207,8 @@ class User:
 
         """
         user_group_names = set(
-            auth.Group.select(auth.Group.name)
+            group.name
+            for group in auth.Group.select(auth.Group.name)
             .join(auth.UserGroups)
             .join(auth.User)
             .switch(auth.Group)
@@ -261,11 +267,16 @@ class Session:
             raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
 
         if self._session.expire_date <= datetime.datetime.utcnow():
-            #: Trying to login an expired session.
+            #: Trying to authenticate an expired session.
             raise Exception("Expired session")  # TODO ExpiredSessionError.
 
         self.token = self._session.token
         self.user = User(_user=self._session.user)
+
+    def __eq__(self, other):
+        if not isinstance(other, Session):
+            return False
+        return self.token == other.token and self.user.id == other.user.id
 
     def expire(self):
         """Updates the expire_date of this Session representation in the database for uctnow.
