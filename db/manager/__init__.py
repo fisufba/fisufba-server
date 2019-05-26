@@ -1,4 +1,4 @@
-from db.models.base import DB
+from db.models.base import db
 from db.manager._auth import Auth
 
 
@@ -9,4 +9,4 @@ class Manager:
         self.auth = Auth(database)
 
 
-manager = Manager(DB)
+manager = Manager(db)
