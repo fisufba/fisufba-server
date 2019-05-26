@@ -84,7 +84,7 @@ class _Signup(AppResource):
                     "Invalid user_group_names"
                 )  # TODO InvalidGroupNameError.
 
-        user_id = getattr(g, "session").user.create_user(
+        user_id = g.session.user.create_user(
             cpf=cpf,
             password=password,
             display_name=display_name,
@@ -214,7 +214,7 @@ class _Logout(AppResource):
             raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
 
         target_session = Session(session_token)
-        if target_session != getattr(g, "session"):
+        if target_session != g.session:
             #: Trying to logout a different session.
             raise Exception("Invalid session")  # TODO InvalidSessionError.
 
@@ -275,7 +275,7 @@ class _Account(AppResource):
                 with information about the execution.
 
         """
-        user, user_group_names = getattr(g, "session").user.get_user(user_id)
+        user, user_group_names = g.session.user.get_user(user_id)
 
         return {
             "_links": {"self": {"href": url_for("_account", user_id=user_id)}},
@@ -339,7 +339,7 @@ class _Account(AppResource):
                 raise Exception("Invalid email")  # TODO InvalidEmailError.
             kwargs["email"] = email
 
-        getattr(g, "session").user.update_user(user_id, **kwargs)
+        g.session.user.update_user(user_id, **kwargs)
 
         return {
             "_links": {"self": {"href": url_for("_account", user_id=user_id)}},
@@ -353,11 +353,11 @@ def authentication():
 
     session_token = request.headers.get("Authentication")
     if session_token is None:
-        setattr(g, "session", None)
+        g.session = None
     else:
         if not isinstance(session_token, str):
             raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
-        setattr(g, "session", Session(session_token))
+        g.session = Session(session_token)
 
 
 def unauthentication(response):

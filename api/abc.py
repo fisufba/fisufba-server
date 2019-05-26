@@ -48,7 +48,7 @@ class AppResource(Resource):
 def authentication_required(func: FunctionType) -> FunctionType:
     @wraps(func)
     def decorated_function(*args, **kwargs):
-        if getattr(g, "session", None) is None:
+        if g.session is None:
             raise Exception  # TODO UnauthenticatedError.
         return func(*args, **kwargs)
 
@@ -58,7 +58,7 @@ def authentication_required(func: FunctionType) -> FunctionType:
 def unauthentication_required(func: FunctionType) -> FunctionType:
     @wraps(func)
     def decorated_function(*args, **kwargs):
-        if getattr(g, "session", None) is not None:
+        if g.session is not None:
             raise Exception  # TODO AuthenticatedError.
         return func(*args, **kwargs)
 
