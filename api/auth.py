@@ -3,7 +3,7 @@ from flask import g, request, url_for
 import utils
 from api.abc import AppResource
 from api.abc import authentication_required, unauthentication_required
-from db.wrapper.auth import User, Session
+from api.db_wrapper.auth import User, Session
 
 
 class _Signup(AppResource):
