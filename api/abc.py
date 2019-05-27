@@ -5,6 +5,7 @@ from typing import Set
 
 from flask import g
 from flask_restful import Resource
+from werkzeug.exceptions import Forbidden
 
 
 class AppResource(Resource):
@@ -49,7 +50,7 @@ def authentication_required(func: FunctionType) -> FunctionType:
     @wraps(func)
     def decorated_function(*args, **kwargs):
         if g.session is None:
-            raise Exception  # TODO UnauthenticatedError.
+            raise Forbidden("forbidden")  # TODO UnauthenticatedError.
         return func(*args, **kwargs)
 
     return decorated_function

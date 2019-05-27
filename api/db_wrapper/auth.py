@@ -4,6 +4,7 @@ from typing import Set, Tuple
 
 import bcrypt
 import peewee
+from werkzeug.exceptions import BadRequest, Forbidden, Conflict, NotFound
 
 import utils
 from db.models import auth
@@ -40,17 +41,17 @@ class User:
             assert password is not None
 
             if not utils.is_valid_cpf(cpf):
-                raise Exception("Invalid cpf")  # TODO InvalidCPFError.
+                raise BadRequest("Invalid cpf")
 
             try:
                 _user = auth.User.get(cpf=utils.unmask_cpf(cpf))
             except auth.User.DoesNotExist:
-                raise Exception("Invalid cpf")  # TODO InvalidCPFError.
+                raise Forbidden("User does not exist")
 
             if not bcrypt.checkpw(
                 password.encode("utf-8"), _user.password.encode("utf-8")
             ):
-                raise Exception("Invalid password")  # TODO InvalidPasswordError.
+                raise Forbidden("Password is wrong")
         else:
             assert cpf is None
             assert password is None
@@ -102,7 +103,8 @@ class User:
             auth.Session.update(expire_date=datetime.datetime.utcnow()).where(
                 auth.Session.token == session_token
             )
-            raise Exception("Login Failed")  # TODO LoginFailedError.
+            # This is indeed an internal server error.
+            raise Exception("Login Failed")
 
         return session_token
 
@@ -128,19 +130,19 @@ class User:
 
         """
         if not utils.is_valid_cpf(cpf):
-            raise Exception("Invalid cpf")  # TODO InvalidCPFError.
+            raise BadRequest("Invalid cpf")
         if email is not None and not utils.is_valid_email(email):
-            raise Exception("Invalid email")  # TODO InvalidEmailError.
+            raise BadRequest("Invalid email")
 
         user_groups = auth.Group.select().where(auth.Group.name.in_(user_group_names))
         if len(user_groups) != len(user_group_names):
-            raise Exception("Invalid group_names")  # TODO InvalidGroupNamesError.
+            raise BadRequest("Invalid group_names")
 
         required_permissions = set(
             f"create_{group_name}" for group_name in user_group_names
         )
         if len(required_permissions.difference(self._permissions)) > 0:
-            raise Exception("Forbidden")  # TODO ForbiddenError.
+            raise Forbidden("Not enough permission")
 
         try:
             user = auth.User.create(
@@ -153,14 +155,14 @@ class User:
                 is_verified=None if email is None else False,
             )
         except peewee.IntegrityError:
-            raise Exception("User already exists")  # TODO NotCreatedError.
+            raise Conflict("User already exists")
 
         try:
             for group in user_groups:
                 auth.UserGroups.create(user=user, group=group)
         except peewee.IntegrityError:
             auth.User.delete().where(auth.User.id == user.id)
-            raise Exception("Duplicated user_group relation")  # TODO NotCreatedError.
+            raise Conflict("Duplicated user_group relation")
 
         return user.id
 
@@ -187,12 +189,12 @@ class User:
             f"read_{group_name}_data" for group_name in user_group_names
         )
         if len(required_permissions.difference(self._permissions)) > 0:
-            raise Exception("Forbidden")  # TODO ForbiddenError.
+            raise Forbidden("Not enough permission")
 
         try:
             return auth.User.get(id=user_id), user_group_names
         except auth.User.DoesNotExist:
-            raise Exception("User not found")  # TODO NotFoundError.
+            raise NotFound("User not found")
 
     def update_user(self, user_id: int, **kwargs):
         """Retrieves an auth.User from the database.
@@ -219,7 +221,7 @@ class User:
             f"change_{group_name}_data" for group_name in user_group_names
         )
         if len(required_permissions.difference(self._permissions)) > 0:
-            raise Exception("Forbidden")  # TODO ForbiddenError.
+            raise Forbidden("Forbidden")
 
         kwargs = dict(kwargs)
         valid_keys = {"cpf", "password", "display_name", "email"}
@@ -228,7 +230,7 @@ class User:
 
         if "cpf" in kwargs:
             if not utils.is_valid_cpf(kwargs["cpf"]):
-                raise Exception("Invalid cpf")  # TODO InvalidCPFError.
+                raise BadRequest("Invalid cpf")
             kwargs["cpf"] = utils.unmask_cpf(kwargs["cpf"])
 
         if "password" in kwargs:
@@ -238,11 +240,12 @@ class User:
 
         if "email" in kwargs and kwargs["email"] is not None:
             if not utils.is_valid_email(kwargs["email"]):
-                raise Exception("Invalid email")  # TODO InvalidEmailError.
+                raise BadRequest("Invalid email")
 
         query = auth.User.update(**kwargs).where(auth.User.id == user_id)
         if query.execute() == 0:
-            raise Exception("Not updated")  # TODO NotUpdatedError.
+            # Is this an internal server error?
+            raise Exception("Not updated")
 
 
 class Session:
@@ -264,11 +267,11 @@ class Session:
         try:
             self._session = auth.Session.get(token=token)
         except auth.Session.DoesNotExist:
-            raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
+            raise Forbidden("Invalid session token")
 
         if self._session.expire_date <= datetime.datetime.utcnow():
             #: Trying to authenticate an expired session.
-            raise Exception("Expired session")  # TODO ExpiredSessionError.
+            raise Forbidden("Expired token")
 
         self.token = self._session.token
         self.user = User(_user=self._session.user)
@@ -286,4 +289,4 @@ class Session:
             auth.Session.id == self._session.id
         )
         if query.execute() == 0:
-            raise Exception("Invalid session")  # TODO InvalidSessionError.
+            raise Forbidden("Invalid session")

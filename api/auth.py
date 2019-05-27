@@ -1,4 +1,5 @@
 from flask import g, request, url_for
+from werkzeug.exceptions import BadRequest
 
 import utils
 from api.abc import AppResource
@@ -54,35 +55,50 @@ class _Signup(AppResource):
                 with information about the execution.
 
         """
-        cpf = request.form.get("cpf")
-        password = request.form.get("password")
-        display_name = request.form.get("display_name")
-        email = request.form.get("email")
-        user_group_names = request.form.get("user_group_names")
+        post_body = request.get_json()
+
+        try:
+            cpf = post_body["cpf"]
+        except KeyError:
+            raise BadRequest("missing cpf field")
+
+        try:
+            password = post_body["password"]
+        except KeyError:
+            raise BadRequest("missing password field")
+
+        try:
+            display_name = post_body["display_name"]
+        except KeyError:
+            raise BadRequest("missing display_name field")
+
+        try:
+            email = post_body["email"]
+        except KeyError:
+            raise BadRequest("missing email field")
+
+        try:
+            user_group_names = post_body["user_group_names"]
+        except KeyError:
+            raise BadRequest("missing user_group_names field")
 
         # checking whether the variables are strings
         if not isinstance(cpf, str):
-            raise Exception("Invalid cpf")  # TODO InvalidCPFError.
+            raise BadRequest("cpf field is not a string")
         if not isinstance(password, str):
-            raise Exception("Invalid password")  # TODO InvalidPasswordError.
+            raise BadRequest("password is not a string")
         if not isinstance(display_name, str):
-            raise Exception("Invalid display_name")  # TODO InvaliDisplayNameError.
+            raise BadRequest("display_name is not a string")
         if email is not None and not isinstance(email, str):
-            raise Exception("Invalid email")  # TODO InvalidEmailError.
-
-        if not isinstance(user_group_names, str):
-            raise Exception("Invalid user_group_names")  # TODO InvalidGroupNamesError.
-        user_group_names = user_group_names.split(",")
+            raise BadRequest("email is not a string")
+        if not isinstance(user_group_names, list):
+            raise BadRequest("user_group_names is not a list")
 
         if len(user_group_names) != len(set(user_group_names)):
-            raise Exception(
-                "Duplicated user_group_names"
-            )  # TODO DuplicatedGroupNameError.
-        for group_name in user_group_names:
-            if not isinstance(group_name, str):
-                raise Exception(
-                    "Invalid user_group_names"
-                )  # TODO InvalidGroupNameError.
+            raise BadRequest("user_group_names contains duplicate names")
+
+        if not all(isinstance(name, str) for name in user_group_names):
+            raise BadRequest("invalid group name in user_group_names")
 
         user_id = g.session.user.create_user(
             cpf=cpf,
@@ -142,13 +158,22 @@ class _Login(AppResource):
                 with a session token (that may be valid or None).
 
         """
-        cpf = request.form.get("cpf")
-        password = request.form.get("password")
+        post_body = request.get_json()
+
+        try:
+            cpf = post_body["cpf"]
+        except KeyError:
+            raise BadRequest("cpf field is missing")
+
+        try:
+            password = post_body["password"]
+        except KeyError:
+            raise BadRequest("password field is missing")
 
         if not isinstance(cpf, str):
-            raise Exception("Invalid cpf")  # TODO InvalidCPFError.
+            raise BadRequest("cpf field must be string")
         if not isinstance(password, str):
-            raise Exception("Invalid password")  # TODO InvalidPasswordError.
+            raise BadRequest("password field must be string")
 
         target_user = User(cpf, password)
         session_token = target_user.create_session()
@@ -206,17 +231,19 @@ class _Logout(AppResource):
                 with information about the execution.
 
         """
-        session_token = request.form.get("token")
+        post_body = request.get_json()
 
-        if session_token is None:
-            raise Exception("Session token not found")  # TODO BadRequestError.
+        try:
+            session_token = post_body["token"]
+        except KeyError:
+            raise BadRequest("token field is missing")
+
         if not isinstance(session_token, str):
-            raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
+            raise BadRequest("Invalid session token")
 
         target_session = Session(session_token)
         if target_session != g.session:
-            #: Trying to logout a different session.
-            raise Exception("Invalid session")  # TODO InvalidSessionError.
+            raise Forbidden("Trying to logout another session")
 
         target_session.expire()
 
@@ -239,7 +266,7 @@ class _Account(AppResource):
             An url path.
 
         """
-        return "/account/<int:user_id>"
+        return "/accounts/<int:user_id>"
 
     @classmethod
     def get_dependencies(cls):
@@ -351,19 +378,22 @@ def authentication():
     if hasattr(g, "session"):
         raise Exception("Inconsistent value found")
 
-    session_token = request.headers.get("Authentication")
+    session_token = request.headers.get("Authorization")
     if session_token is None:
         g.session = None
     else:
-        if not isinstance(session_token, str):
-            raise Exception("Invalid session token")  # TODO InvalidSessionTokenError.
-        g.session = Session(session_token)
+        if not isinstance(session_token, str) or not session_token.startswith(
+            "fisufba "
+        ):
+            raise BadRequest("Invalid session token")  # TODO InvalidSessionTokenError.
+        if not session_token.startswith("fisufba "):
+            raise BadRequest("Invalid session token")  # TODO InvalidSessionTokenError.
+        g.session = Session(session_token[8:])
 
 
 def unauthentication(response):
-    if not hasattr(g, "session"):
-        raise Exception("Inconsistent value found")
-    g.pop("session")
+    if hasattr(g, "session"):
+        g.pop("session")
     return response
 
 
