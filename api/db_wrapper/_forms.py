@@ -3,7 +3,7 @@ import enum
 from abc import ABC, abstractmethod
 
 import peewee
-from werkzeug.exceptions import BadRequest, Conflict, NotFound
+from werkzeug.exceptions import Conflict, NotFound
 
 from db.models import forms
 
@@ -34,7 +34,8 @@ class Form(ABC):
 
     def update(self, **kwargs):
         if self._form is None:
-            raise BadRequest("Form was not instantiated")
+            # This is indeed an internal server error.
+            raise Exception("Form was not properly instantiated")
 
         self._validate_kwargs(**kwargs)
 
