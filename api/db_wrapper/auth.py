@@ -4,7 +4,7 @@ from typing import Set
 
 import bcrypt
 import peewee
-from werkzeug.exceptions import BadRequest, Forbidden, Conflict, NotFound
+from werkzeug.exceptions import BadRequest, Conflict, Forbidden, NotFound
 
 import utils
 from api.db_wrapper._forms import FormTypes
