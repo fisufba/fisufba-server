@@ -1,12 +1,13 @@
 import datetime
 import secrets
-from typing import Set, Tuple
+from typing import Set
 
 import bcrypt
 import peewee
 from werkzeug.exceptions import BadRequest, Forbidden, Conflict, NotFound
 
 import utils
+from api.db_wrapper._forms import FormTypes
 from db.models import auth
 
 
@@ -166,14 +167,14 @@ class User:
 
         return user.id
 
-    def get_user(self, user_id: int) -> Tuple[auth.User, Set[str]]:
-        """Retrieves an auth.User from the database.
+    def get_serialized_user(self, user_id: int) -> dict:
+        """Retrieves the serialized data of an auth.User from the database.
 
         Args:
             user_id: the id of the target auth.User.
 
         Returns:
-            An auth.User from the database.
+            A serialized auth.User from the database.
 
         """
         user_group_names = set(
@@ -192,9 +193,20 @@ class User:
             raise Forbidden("Not enough permission")
 
         try:
-            return auth.User.get(id=user_id), user_group_names
+            user = auth.User.get(id=user_id)
         except auth.User.DoesNotExist:
             raise NotFound("User not found")
+
+        return dict(
+            id=user.id,
+            cpf=utils.mask_cpf(user.cpf),
+            display_name=user.display_name,
+            email=user.email,
+            is_active=user.is_active,
+            is_verified=user.is_verified,
+            last_login=None if user.last_login is None else user.last_login.isoformat(),
+            groups=list(user_group_names),
+        )
 
     def update_user(self, user_id: int, **kwargs):
         """Retrieves an auth.User from the database.
@@ -246,6 +258,29 @@ class User:
         if query.execute() == 0:
             # Is this an internal server error?
             raise Exception("Not updated")
+
+        if user_id == self.id:
+            self._restore()
+
+    def create_form(self, form_t: FormTypes, **kwargs) -> int:
+        pass
+
+    def get_serialized_form(self, form_t: FormTypes, form_id: int) -> dict:
+        pass
+
+    def update_form(self, form_t: FormTypes, form_id: int, **kwargs):
+        pass
+
+    def _restore(self):
+        try:
+            self._user = auth.User.get(id=self.id)
+        except auth.User.DoesNotExist:
+            # This is indeed an internal server error.
+            raise Exception("User does not exist")
+
+        self.cpf = utils.mask_cpf(self._user.cpf)
+        self.display_name = self._user.display_name
+        self.email = self._user.email
 
 
 class Session:
