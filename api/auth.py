@@ -1,7 +1,6 @@
 from flask import g, request, url_for
-from werkzeug.exceptions import BadRequest
+from werkzeug.exceptions import BadRequest, Forbidden
 
-import utils
 from api.abc import AppResource
 from api.abc import authentication_required, unauthentication_required
 from api.db_wrapper.auth import User, Session
@@ -302,22 +301,9 @@ class _Account(AppResource):
                 with information about the execution.
 
         """
-        user, user_group_names = g.session.user.get_user(user_id)
-
         return {
             "_links": {"self": {"href": url_for("_account", user_id=user_id)}},
-            "user": dict(
-                id=user.id,
-                cpf=utils.mask_cpf(user.cpf),
-                display_name=user.display_name,
-                email=user.email,
-                is_active=user.is_active,
-                is_verified=user.is_verified,
-                last_login=None
-                if user.last_login is None
-                else user.last_login.isoformat(),
-                groups=list(user_group_names),
-            ),
+            "user": g.session.user.get_serialized_user(user_id),
         }
 
     @authentication_required
