@@ -16,7 +16,7 @@ class Form(ABC):
 
         if _id is not None:
             try:
-                self._form = self._db_model.get(id=_id)
+                self._form = self._db_model.get_by_id(_id)
             except self._db_model.DoesNotExist:
                 raise NotFound("Form not found")
 

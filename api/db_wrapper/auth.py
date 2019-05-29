@@ -193,7 +193,7 @@ class User:
             raise Forbidden("Not enough permission")
 
         try:
-            user = auth.User.get(id=user_id)
+            user = auth.User.get_by_id(user_id)
         except auth.User.DoesNotExist:
             raise NotFound("User not found")
 
@@ -273,7 +273,7 @@ class User:
 
     def _restore(self):
         try:
-            self._user = auth.User.get(id=self.id)
+            self._user = auth.User.get_by_id(self.id)
         except auth.User.DoesNotExist:
             # This is indeed an internal server error.
             raise Exception("User does not exist")
