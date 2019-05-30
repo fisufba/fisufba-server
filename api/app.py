@@ -55,5 +55,13 @@ class _Index(AppResource):
                     "href": url_for("_account", user_id=0),
                     "templated": True,
                 },
+                "forms:sociodemographic": {
+                    "href": url_for("_sociodemographic", form_id=0),
+                    "templated": True,
+                },
+                "forms:kineticfunctional": {
+                    "href": url_for("_kineticfunctional", form_id=0),
+                    "templated": True,
+                },
             }
         }
