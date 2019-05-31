@@ -50,7 +50,7 @@ class FormsIndex(AppResource):
         """
         return {
             "_links": {
-                "self": {"href": url_for("_formsindex")},
+                "self": {"href": url_for("formsindex")},
                 "curies": [{"name": "forms", "href": "TODO/{rel}", "templated": True}],
                 "forms:_sociodemographicevaluation": {
                     "href": url_for("_sociodemographicevaluation"),
