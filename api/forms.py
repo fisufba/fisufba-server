@@ -1,22 +1,91 @@
 from flask import g, request, url_for
 from werkzeug.exceptions import BadRequest
 
+from api.abc import AppResource
 from api.abc import authentication_required
 from api.db_wrapper import FormTypes
 from _datetime import datetime
 
 
-class _Sociodemographic:
-    """AppResource responsible for read and update user information.
+class FormsIndex(AppResource):
+    """AppResource responsible for the Forms index of an Api.
 
-        """
+    """
 
     @classmethod
     def get_path(cls):
-        """TODO.
+        """Returns the url path of this AppResource.
 
         Returns:
-            TODO.
+            An url path.
+
+        """
+        return "/forms"
+
+    @classmethod
+    def get_dependencies(cls):
+        """Returns the dependencies of this AppResource.
+
+        Notes:
+            If there's no dependency this must return an empty set.
+
+        Returns:
+            A set of module names that contains AppResource
+                classes used by this AppResource.
+
+        """
+        return set()
+
+    def get(self):
+        """Treats HTTP GET requests.
+
+        It shows the possible paths to follow.
+
+        Notes:
+            For better understanding, refer: http://stateless.co/hal_specification.html.
+
+        Returns:
+            Dict object following the HAL format.
+
+        """
+        return {
+            "_links": {
+                "self": {"href": url_for("_formsindex")},
+                "curies": [{"name": "forms", "href": "TODO/{rel}", "templated": True}],
+                "forms:_sociodemographicevaluation": {
+                    "href": url_for("_sociodemographicevaluation"),
+                    "templated": True,
+                },
+                "forms:_sociodemographicevaluationview": {
+                    "href": url_for("_sociodemographicevaluationview", form_id=0),
+                    "templated": True,
+                },
+                "forms:kineticfunctionalevaluation": {
+                    "href": url_for("_kineticfunctionalevaluation"),
+                    "templated": True,
+                },
+                "forms:kineticfunctionalevaluationview": {
+                    "href": url_for("_kineticfunctionalevaluationview", form_id=0),
+                    "templated": True,
+                },
+            }
+        }
+
+
+class _SociodemographicEvaluation(AppResource):
+    """AppResource responsible for SociodemographicEvaluation form creation.
+
+    """
+
+    @classmethod
+    def get_path(cls):
+        """Returns the url path of this AppResource.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            An url path.
 
         """
         return "/forms/sociodemographicevaluation"
@@ -26,11 +95,14 @@ class _Sociodemographic:
         """Returns the dependencies of this AppResource.
 
         Notes:
-            TODO
+            If there's no dependency this must return an empty set.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
 
         Returns:
-            TODO
-
+            A set of module names that contains AppResource
+                classes used by this AppResource.
 
         """
         return set()
@@ -151,22 +223,25 @@ class _Sociodemographic:
         )
 
         return {
-            "_links": {"self": {"href": url_for("_sociodemographic", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_sociodemographicevaluation")}},
             "form_id": form_id,
         }
 
 
-class _SociodemographicView:
-    """AppResource responsible for read and update user information.
+class _SociodemographicEvaluationView(AppResource):
+    """AppResource responsible for read and update SociodemographicEvaluation form information.
 
-            """
+    """
 
     @classmethod
     def get_path(cls):
-        """TODO.
+        """Returns the url path of this AppResource.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
 
         Returns:
-            TODO.
+            An url path.
 
         """
         return "/forms/sociodemographicevaluation/<int:form_id>"
@@ -176,11 +251,14 @@ class _SociodemographicView:
         """Returns the dependencies of this AppResource.
 
         Notes:
-            TODO
+            If there's no dependency this must return an empty set.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
 
         Returns:
-            TODO
-
+            A set of module names that contains AppResource
+                classes used by this AppResource.
 
         """
         return set()
@@ -231,7 +309,9 @@ class _SociodemographicView:
             evaluation_date = patch_body["evaluation_date"]
             if not isinstance(evaluation_date, str):
                 raise BadRequest("evaluation_date field is not a string")
-            kwargs["evaluation_date"] = datetime.strftime(evaluation_date, "%d/%m/%Y").isoformat()
+            kwargs["evaluation_date"] = datetime.strftime(
+                evaluation_date, "%d/%m/%Y"
+            ).isoformat()
 
         if "civil_status" in patch_body:
             civil_status = patch_body["civil_status"]
@@ -296,36 +376,46 @@ class _SociodemographicView:
         g.session.user.update_form(form_id=form_id, **kwargs)
 
         return {
-            "_links": {"self": {"href": url_for("_sociodemographic", form_id=form_id)}},
+            "_links": {
+                "self": {
+                    "href": url_for("_sociodemographicevaluationview", form_id=form_id)
+                }
+            },
             "form_id": form_id,
         }
 
 
-class _KineticFunctional:
-    """AppResource responsible for read and update user information.
+class _KineticFunctionalEvaluation(AppResource):
+    """AppResource responsible for KineticFunctionalEvaluation form creation.
 
-        """
+    """
 
     @classmethod
     def get_path(cls):
-        """TODO.
+        """Returns the url path of this AppResource.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
 
         Returns:
-            TODO.
+            An url path.
 
         """
-        return "/forms/kineticfunctionalevaluation"
+        return "/forms/kineticFunctionalevaluation"
 
     @classmethod
     def get_dependencies(cls):
         """Returns the dependencies of this AppResource.
 
         Notes:
-            TODO
+            If there's no dependency this must return an empty set.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
 
         Returns:
-            TODO
-
+            A set of module names that contains AppResource
+                classes used by this AppResource.
 
         """
         return set()
@@ -515,22 +605,25 @@ class _KineticFunctional:
         )
 
         return {
-            "_links": {"self": {"href": url_for("_kineticfunctional", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_kineticfunctionalevaluation")}},
             "form_id": form_id,
         }
 
 
-class _KineticFunctionalView:
-    """AppResource responsible for read and update user information.
+class _KineticFunctionalEvaluationView(AppResource):
+    """AppResource responsible for read and update KineticFunctionalEvaluation form information.
 
-            """
+    """
 
     @classmethod
     def get_path(cls):
-        """TODO.
+        """Returns the url path of this AppResource.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
 
         Returns:
-            TODO.
+            An url path.
 
         """
         return "/forms/kineticfunctionalevaluation/<int:form_id>"
@@ -540,11 +633,14 @@ class _KineticFunctionalView:
         """Returns the dependencies of this AppResource.
 
         Notes:
-            TODO
+            If there's no dependency this must return an empty set.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
 
         Returns:
-            TODO
-
+            A set of module names that contains AppResource
+                classes used by this AppResource.
 
         """
         return set()
@@ -595,7 +691,9 @@ class _KineticFunctionalView:
             evaluation_date = patch_body["evaluation_date"]
             if not isinstance(evaluation_date, str):
                 raise BadRequest("evaluation_date field is not a string")
-            kwargs["evaluation_date"] = datetime.strftime(evaluation_date, "%d/%m/%Y").isoformat()
+            kwargs["evaluation_date"] = datetime.strftime(
+                evaluation_date, "%d/%m/%Y"
+            ).isoformat()
 
         if "clinic_diagnostic" in patch_body:
             clinic_diagnostic = patch_body["clinic_diagnostic"]
@@ -724,6 +822,10 @@ class _KineticFunctionalView:
         g.session.user.update_form(form_id=form_id, **kwargs)
 
         return {
-            "_links": {"self": {"href": url_for("_kineticfunctional", form_id=form_id)}},
+            "_links": {
+                "self": {
+                    "href": url_for("_kineticfunctionalevaluationview", form_id=form_id)
+                }
+            },
             "form_id": form_id,
         }

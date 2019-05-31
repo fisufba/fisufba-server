@@ -7,7 +7,7 @@ from api.db_wrapper.auth import User, Session
 
 
 class _Signup(AppResource):
-    """AppResource responsible for User account creation and deletion.
+    """AppResource responsible for User account creation.
 
     """
 

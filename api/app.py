@@ -30,7 +30,7 @@ class _Index(AppResource):
                 classes used by this AppResource.
 
         """
-        return {"api.auth"}
+        return {"api.auth", "api.forms"}
 
     def get(self):
         """Treats HTTP GET requests.
@@ -47,7 +47,10 @@ class _Index(AppResource):
         return {
             "_links": {
                 "self": {"href": url_for("_index")},
-                "curies": [{"name": "auth", "href": "TODO/{rel}", "templated": True}],
+                "curies": [
+                    {"name": "auth", "href": "TODO/{rel}", "templated": True},
+                    {"name": "forms", "href": "TODO/{rel}", "templated": True},
+                ],
                 "auth:signup": {"href": url_for("_signup"), "templated": True},
                 "auth:login": {"href": url_for("_login"), "templated": True},
                 "auth:logout": {"href": url_for("_logout"), "templated": True},
@@ -55,13 +58,6 @@ class _Index(AppResource):
                     "href": url_for("_account", user_id=0),
                     "templated": True,
                 },
-                "forms:sociodemographic": {
-                    "href": url_for("_sociodemographic", form_id=0),
-                    "templated": True,
-                },
-                "forms:kineticfunctional": {
-                    "href": url_for("_kineticfunctional", form_id=0),
-                    "templated": True,
-                },
+                "forms:index": {"href": url_for("_formsindex"), "templated": True},
             }
         }
