@@ -112,19 +112,9 @@ class _SociodemographicEvaluation(AppResource):
         post_body = request.get_json()
 
         try:
-            user_id = post_body["user_id"]
+            patient_information_id = post_body["patient_information_id"]
         except KeyError:
-            raise BadRequest("user_id field is missing")
-
-        try:
-            medical_record_number = post_body["medical_record_number"]
-        except KeyError:
-            raise BadRequest("medical_record_number field is missing")
-
-        try:
-            evaluation_date = post_body["evaluation_date"]
-        except KeyError:
-            raise BadRequest("evaluation_date field is missing")
+            raise BadRequest("patient_information_id field is missing")
 
         try:
             civil_status = post_body["civil_status"]
@@ -146,56 +136,62 @@ class _SociodemographicEvaluation(AppResource):
         except KeyError:
             raise BadRequest("occupational_status field is missing")
 
-        current_job = post_body.get("current_job", None)
+        try:
+            current_job = post_body["current_job"]
+        except KeyError:
+            raise BadRequest("current_job field is missing")
 
-        last_job = post_body.get("last_job", None)
+        try:
+            last_job = post_body["last_job"]
+        except KeyError:
+            raise BadRequest("last_job field is missing")
 
         try:
             is_sick = post_body["is_sick"]
         except KeyError:
             raise BadRequest("is_sick field is missing")
 
-        diseases = post_body.get("diseases", None)
+        try:
+            diseases = post_body["diseases"]
+        except KeyError:
+            raise BadRequest("diseases field is missing")
 
         try:
             is_medicated = post_body["is_medicated"]
         except KeyError:
             raise BadRequest("is_medicated field is missing")
 
-        medicines = post_body.get("medicines", None)
+        try:
+            medicines = post_body["medicines"]
+        except KeyError:
+            raise BadRequest("medicines field is missing")
 
-        if not isinstance(user_id, int):
-            raise BadRequest("user_id field is not an integer")
-        if not isinstance(medical_record_number, int):
-            raise BadRequest("medical_record_number field is not an integer")
-        if not isinstance(evaluation_date, str):
-            raise BadRequest("evaluation_date field is not a string")
+        if not isinstance(patient_information_id, int):
+            raise BadRequest("patient_information_id is not an integer")
         if not isinstance(civil_status, str):
-            raise BadRequest("civil_status field is not a string")
+            raise BadRequest("civil_status is not a string")
         if not isinstance(lives_with_status, str):
-            raise BadRequest("lives_with_statusfield is not a string")
+            raise BadRequest("lives_with_status is not a string")
         if not isinstance(education, str):
-            raise BadRequest("education field is not a string")
+            raise BadRequest("education is not a string")
         if not isinstance(occupational_status, str):
-            raise BadRequest("occupational_status field is not a string")
+            raise BadRequest("occupational_status is not a string")
         if current_job is not None and not isinstance(current_job, str):
-            raise BadRequest("current_job field is not a string")
+            raise BadRequest("current_job is not a string")
         if last_job is not None and not isinstance(last_job, str):
-            raise BadRequest("last_job field is not a string")
+            raise BadRequest("last_job is not a string")
         if not isinstance(is_sick, bool):
-            raise BadRequest("is_sick field is not an boolean")
+            raise BadRequest("is_sick is not a boolean")
         if diseases is not None and not isinstance(diseases, list):
-            raise BadRequest("diseases field is not an list")
+            raise BadRequest("diseases is not a list")
         if not isinstance(is_medicated, bool):
-            raise BadRequest("is_medicated field is not an boolean")
+            raise BadRequest("is_medicated field is not a boolean")
         if medicines is not None and not isinstance(medicines, list):
-            raise BadRequest("medicines field is not an list")
+            raise BadRequest("medicines field is not a list")
 
         form_id = g.session.user.create_form(
-            FormTypes("sociodemographic"),
-            user_id=user_id,
-            medical_record_number=medical_record_number,
-            evaluation_date=datetime.strftime(evaluation_date, "%d/%m/%Y").isoformat(),
+            FormTypes("sociodemographic_evaluation"),
+            patient_information_id=patient_information_id,
             civil_status=civil_status,
             lives_with_status=lives_with_status,
             education=education,
@@ -372,7 +368,7 @@ class _KineticFunctionalEvaluation(AppResource):
             An url path.
 
         """
-        return "/forms/kineticFunctionalevaluation"
+        return "/forms/kineticfunctionalevaluation"
 
     @classmethod
     def get_dependencies(cls):

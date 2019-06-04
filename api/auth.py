@@ -83,7 +83,7 @@ class _Signup(AppResource):
 
         # checking whether the variables are strings
         if not isinstance(cpf, str):
-            raise BadRequest("cpf field is not a string")
+            raise BadRequest("cpf is not a string")
         if not isinstance(password, str):
             raise BadRequest("password is not a string")
         if not isinstance(display_name, str):
