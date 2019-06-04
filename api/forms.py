@@ -109,20 +109,6 @@ class _SociodemographicEvaluation(AppResource):
 
     @authentication_required
     def post(self):
-        """Treats HTTP POST requests.
-            TODO
-
-        Notes:
-            TODO
-
-        Raises:
-            TODO
-
-        Returns:
-            TODO
-
-
-        """
         post_body = request.get_json()
 
         try:
@@ -274,21 +260,6 @@ class _SociodemographicEvaluationView(AppResource):
 
     @authentication_required
     def patch(self, form_id: int):
-        """Treats HTTP PATCH requests.
-            TODO
-
-        Notes:
-            TODO
-
-        Raises:
-            TODO.
-
-        Returns:
-            TODO
-
-
-        """
-
         patch_body = request.get_json()
 
         kwargs = {}
@@ -422,20 +393,6 @@ class _KineticFunctionalEvaluation(AppResource):
 
     @authentication_required
     def post(self):
-        """Treats HTTP POST requests.
-            TODO
-
-        Notes:
-            TODO
-
-        Raises:
-            TODO
-
-        Returns:
-            TODO
-
-
-        """
         post_body = request.get_json()
 
         try:
@@ -656,21 +613,6 @@ class _KineticFunctionalEvaluationView(AppResource):
 
     @authentication_required
     def patch(self, form_id: int):
-        """Treats HTTP PATCH requests.
-            TODO
-
-        Notes:
-            TODO
-
-        Raises:
-            TODO.
-
-        Returns:
-            TODO
-
-
-        """
-
         patch_body = request.get_json()
 
         kwargs = {}
