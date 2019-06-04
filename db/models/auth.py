@@ -21,11 +21,10 @@ class User(_BaseModel):
     display_name = CharField()
     email = CharField(unique=True, default=None, null=True)
 
-    is_active = BooleanField(default=True)
-    is_verified = BooleanField(default=None, null=True)
-
     last_login = DateTimeField(default=None, null=True)
-    created_at = DateTimeField(default=datetime.datetime.utcnow())
+
+    verified_at = BooleanField(default=None, null=True)
+    deactivated_at = BooleanField(default=None, null=True)
 
 
 class Group(_BaseModel):
@@ -73,7 +72,6 @@ class Session(_BaseModel):
     expire_date = DateTimeField(
         default=datetime.datetime.utcnow() + relativedelta.relativedelta(years=1)
     )
-    created_at = DateTimeField(default=datetime.datetime.utcnow())
 
 
 _AUTH_TABLES = (User, Group, UserGroups, Permission, GroupPermissions, Session)

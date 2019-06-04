@@ -1,11 +1,9 @@
 import enum
-import datetime
 
 from peewee import BooleanField
 from peewee import CharField
 from peewee import DateTimeField
 from peewee import ForeignKeyField
-from peewee import IntegerField
 from peewee import TextField
 
 from db.models.auth import User
@@ -34,13 +32,9 @@ class PatientInformation(_BaseModel):
     city = CharField()
     country = CharField()
 
-    created_at = DateTimeField(default=datetime.datetime.utcnow())
-
 
 class Form(_BaseModel):
     patient_information = ForeignKeyField(PatientInformation)
-    updated_at = DateTimeField(default=None, null=True)
-    created_at = DateTimeField(default=datetime.datetime.utcnow())
 
 
 class SociodemographicEvaluation(Form):
@@ -71,9 +65,6 @@ class SociodemographicEvaluation(Form):
         Employed = "Empregado(a)"
         AwayForHealth = "Afastado(a) por problemas de saúde"
         Retired = "Aposentado(a)"
-
-    medical_record_number = IntegerField()
-    evaluation_date = DateTimeField()
 
     civil_status = EnumField(CivilStatusTypes)
     lives_with_status = EnumField(LivesWithStatusTypes)
@@ -126,9 +117,6 @@ class KineticFunctionalEvaluation(Form):
         EORCTQLQC30 = 16384
         SaintGeorge = 32768
         BarthelScale = 65536
-
-    medical_record_number = IntegerField()
-    evaluation_date = DateTimeField()
 
     #: Main and Functional Complaints.
     clinic_diagnostic = TextField()
