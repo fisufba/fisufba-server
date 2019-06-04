@@ -131,6 +131,10 @@ class User:
             The id of the created auth.User.
 
         """
+        self._validate_kwargs(
+            cpf=cpf, password=password, display_name=display_name, email=email
+        )
+
         creation_kwargs = self._convert_kwarg_values(
             cpf=cpf, password=password, display_name=display_name, email=email
         )
@@ -216,6 +220,8 @@ class User:
                 email: the new auth.User's email.
 
         """
+        self._validate_kwargs(**kwargs)
+
         update_kwargs = self._convert_kwarg_values(**kwargs)
 
         user_group_names = set(
@@ -266,6 +272,7 @@ class User:
 
     def _convert_kwarg_values(self, **kwargs):
         self._validate_kwargs(**kwargs)
+
         if "cpf" in kwargs:
             kwargs["cpf"] = utils.unmask_cpf(kwargs["cpf"])
 
