@@ -70,6 +70,7 @@ class PatientInformation:
             raise Exception("patient information was not properly instantiated")
 
         return dict(
+            id=self._patient_information.id,
             user_id=self._patient_information.user.id,
             gender=self._patient_information.gender.value,
             birthday=self._patient_information.birthday.isoformat(),
@@ -141,10 +142,10 @@ class PatientInformation:
                 raise TypeError(f"{kwarg} is not a valid keyword argument")
 
         if "gender" in kwargs:
-            genders = set(
+            gender_types = set(
                 gender.value for gender in forms.PatientInformation.GenderTypes
             )
-            if kwargs["gender"] not in genders:
+            if kwargs["gender"] not in gender_types:
                 raise BadRequest("invalid gender")
 
 
@@ -230,13 +231,111 @@ class SociodemographicEvaluation(Form):
     _db_model = forms.SociodemographicEvaluation
 
     def _convert_kwarg_values(self, **kwargs):
-        self._validate_kwargs()
+        if "civil_status" in kwargs:
+            kwargs["civil_status"] = forms.SociodemographicEvaluation.CivilStatusTypes(
+                kwargs["civil_status"]
+            )
+
+        if "lives_with_status" in kwargs:
+            kwargs[
+                "lives_with_status"
+            ] = forms.SociodemographicEvaluation.LivesWithStatusTypes(
+                kwargs["lives_with_status"]
+            )
+
+        if "education" in kwargs:
+            kwargs["education"] = forms.SociodemographicEvaluation.EducationTypes(
+                kwargs["education"]
+            )
+
+        if "occupational_status" in kwargs:
+            kwargs[
+                "occupational_status"
+            ] = forms.SociodemographicEvaluation.OccupationalStatusTypes(
+                kwargs["occupational_status"]
+            )
+
+        return kwargs
 
     def _serialized(self):
-        pass
+        return dict(
+            id=self._form.id,
+            patient_information_id=self._form.patient_information.id,
+            civil_status=self._form.civil_status.value,
+            lives_with_status=self._form.lives_with_status.value,
+            education=self._form.education.value,
+            occupational_status=self._form.occupational_status.value,
+            current_job=self._form.current_job,
+            last_job=self._form.last_job,
+            is_sick=self._form.is_sick,
+            diseases=self._form.diseases,
+            is_medicated=self._form.is_medicated,
+            medicines=self._form.medicines,
+            updated_at=None
+            if self._form.updated_at is None
+            else self._form.updated_at.isoformat(),
+            created_at=None
+            if self._form.created_at is None
+            else self._form.created_at.isoformat(),
+        )
 
     def _validate_kwargs(self, **kwargs):
-        pass
+        valid_kwargs = {
+            "civil_status",
+            "lives_with_status",
+            "education",
+            "occupational_status",
+            "current_job",
+            "last_job",
+            "is_sick",
+            "diseases",
+            "is_medicated",
+            "medicines",
+        }
+        for kwarg in kwargs.keys():
+            if kwarg not in valid_kwargs:
+                # This is indeed an internal server error.
+                raise TypeError(f"{kwarg} is not a valid keyword argument")
+
+        if "civil_status" in kwargs:
+            civil_status_types = set(
+                civil_status.value
+                for civil_status in forms.SociodemographicEvaluation.CivilStatusTypes
+            )
+            if kwargs["civil_status"] not in civil_status_types:
+                raise BadRequest("invalid civil_status")
+
+        if "lives_with_status" in kwargs:
+            lives_with_status_types = set(
+                lives_with_status.value
+                for lives_with_status in forms.SociodemographicEvaluation.LivesWithStatusTypes
+            )
+            if kwargs["lives_with_status"] not in lives_with_status_types:
+                raise BadRequest("invalid lives_with_status")
+
+        if "education" in kwargs:
+            education_types = set(
+                education.value
+                for education in forms.SociodemographicEvaluation.EducationTypes
+            )
+            if kwargs["education"] not in education_types:
+                raise BadRequest("invalid education")
+
+        if "occupational_status" in kwargs:
+            occupational_status_types = set(
+                occupational_status.value
+                for occupational_status in forms.SociodemographicEvaluation.OccupationalStatusTypes
+            )
+            if kwargs["occupational_status"] not in occupational_status_types:
+                raise BadRequest("invalid occupational_status")
+
+        if "diseases" in kwargs:
+            if not all(isinstance(disease, str) for disease in kwargs["diseases"]):
+                raise BadRequest("invalid disease value")
+
+        if "medicines" in kwargs:
+            if not all(isinstance(medicine, str) for medicine in kwargs["medicines"]):
+                raise BadRequest("invalid medicine value")
 
 
 class KineticFunctionalEvaluation(Form):
