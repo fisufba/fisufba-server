@@ -329,8 +329,6 @@ class User:
             raise Forbidden("Not enough permission")
 
     def _convert_kwarg_values(self, **kwargs):
-        self._validate_kwargs(**kwargs)
-
         if "cpf" in kwargs:
             kwargs["cpf"] = utils.unmask_cpf(kwargs["cpf"])
 

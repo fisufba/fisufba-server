@@ -106,8 +106,6 @@ class PatientInformation:
         self._restore()
 
     def _convert_kwarg_values(self, **kwargs):
-        self._validate_kwargs(**kwargs)
-
         if "gender" in kwargs:
             kwargs["gender"] = forms.PatientInformation.GenderTypes(kwargs["gender"])
 
@@ -232,7 +230,7 @@ class SociodemographicEvaluation(Form):
     _db_model = forms.SociodemographicEvaluation
 
     def _convert_kwarg_values(self, **kwargs):
-        pass
+        self._validate_kwargs()
 
     def _serialized(self):
         pass
