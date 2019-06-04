@@ -250,7 +250,7 @@ class _SociodemographicEvaluationView(AppResource):
         return {
             "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
             "form": g.session.user.get_serialized_form(
-                form_t=FormTypes("sociodemographic"), form_id=form_id
+                form_t=FormTypes("sociodemographic_evaluation"), form_id=form_id
             ),
         }
 
@@ -260,87 +260,69 @@ class _SociodemographicEvaluationView(AppResource):
 
         kwargs = {}
 
-        if "user_id" in patch_body:
-            user_id = patch_body["user_id"]
-            if not isinstance(user_id, int):
-                raise BadRequest("user_id field is not an integer")
-            kwargs["user_id"] = user_id
-
-        if "medical_record_number" in patch_body:
-            medical_record_number = patch_body["medical_record_number"]
-            if not isinstance(medical_record_number, int):
-                raise BadRequest("medical_record_number field is not an integer")
-            kwargs["medical_record_number"] = medical_record_number
-
-        if "evaluation_date" in patch_body:
-            evaluation_date = patch_body["evaluation_date"]
-            if not isinstance(evaluation_date, str):
-                raise BadRequest("evaluation_date field is not a string")
-            kwargs["evaluation_date"] = datetime.strftime(
-                evaluation_date, "%d/%m/%Y"
-            ).isoformat()
-
         if "civil_status" in patch_body:
             civil_status = patch_body["civil_status"]
             if not isinstance(civil_status, str):
-                raise BadRequest("civil_status field is not a string")
+                raise BadRequest("civil_status is not a string")
             kwargs["civil_status"] = civil_status
 
         if "lives_with_status" in patch_body:
             lives_with_status = patch_body["lives_with_status"]
             if not isinstance(lives_with_status, str):
-                raise BadRequest("lives_with_status field is not a string")
+                raise BadRequest("lives_with_status is not a string")
             kwargs["lives_with_status"] = lives_with_status
 
         if "education" in patch_body:
             education = patch_body["education"]
             if not isinstance(education, str):
-                raise BadRequest("education field is not a string")
+                raise BadRequest("education is not a string")
             kwargs["education"] = education
 
         if "occupational_status" in patch_body:
             occupational_status = patch_body["occupational_status"]
             if not isinstance(occupational_status, str):
-                raise BadRequest("occupational_status field is not a string")
+                raise BadRequest("occupational_status is not a string")
             kwargs["occupational_status"] = occupational_status
 
         if "current_job" in patch_body:
             current_job = patch_body["current_job"]
-            if not isinstance(current_job, str):
-                raise BadRequest("current_job field is not a string")
+            if current_job is not None and not isinstance(current_job, str):
+                raise BadRequest("current_job is not a string")
             kwargs["current_job"] = current_job
 
         if "last_job" in patch_body:
             last_job = patch_body["last_job"]
-            if not isinstance(last_job, str):
-                raise BadRequest("last_job field is not a string")
+            if last_job is not None and not isinstance(last_job, str):
+                raise BadRequest("last_job is not a string")
             kwargs["last_job"] = last_job
 
         if "is_sick" in patch_body:
             is_sick = patch_body["is_sick"]
             if not isinstance(is_sick, bool):
-                raise BadRequest("is_sick field is not a boolean")
+                raise BadRequest("is_sick is not a boolean")
             kwargs["is_sick"] = is_sick
 
         if "diseases" in patch_body:
             diseases = patch_body["diseases"]
             if not isinstance(diseases, list):
-                raise BadRequest("diseases field is not a string")
+                raise BadRequest("diseases is not a list")
             kwargs["diseases"] = diseases
 
         if "is_medicated" in patch_body:
             is_medicated = patch_body["is_medicated"]
             if not isinstance(is_medicated, bool):
-                raise BadRequest("is_medicated field is not a boolean")
+                raise BadRequest("is_medicated is not a boolean")
             kwargs["is_medicated"] = is_medicated
 
         if "medicines" in patch_body:
             medicines = patch_body["medicines"]
-            if not isinstance(medicines, list):
-                raise BadRequest("medicines field is not a string")
+            if medicines is not None and not isinstance(medicines, list):
+                raise BadRequest("medicines is not a list")
             kwargs["medicines"] = medicines
 
-        g.session.user.update_form(form_id=form_id, **kwargs)
+        g.session.user.update_form(
+            form_t=FormTypes("sociodemographic_evaluation"), form_id=form_id, **kwargs
+        )
 
         return {
             "_links": {

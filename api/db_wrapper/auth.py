@@ -309,7 +309,7 @@ class User:
             # This is indeed an internal server error.
             raise NotImplementedError("Unexpected form type")
 
-        form.serialized()
+        return form.serialized()
 
     def update_form(self, form_t: forms_wrapper.FormTypes, form_id: int, **kwargs):
         self._check_permissions({f"change_{form_t.value}_form_data"})
