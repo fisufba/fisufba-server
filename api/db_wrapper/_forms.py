@@ -228,6 +228,32 @@ class Form(ABC):
         raise NotImplementedError
 
 
+class SociodemographicEvaluation(Form):
+    _db_model = forms.SociodemographicEvaluation
+
+    def _convert_kwarg_values(self, **kwargs):
+        pass
+
+    def _serialized(self):
+        pass
+
+    def _validate_kwargs(self, **kwargs):
+        pass
+
+
+class KineticFunctionalEvaluation(Form):
+    _db_model = forms.KineticFunctionalEvaluation
+
+    def _convert_kwarg_values(self, **kwargs):
+        pass
+
+    def _serialized(self):
+        pass
+
+    def _validate_kwargs(self, **kwargs):
+        pass
+
+
 class FormTypes(enum.Enum):
     SociodemographicEvaluation = "sociodemographic_evaluation"
     KineticFunctionalEvaluation = "kinetic_functional_evaluation"

@@ -251,12 +251,12 @@ class User:
     def create_patient_information(self, user_id: int, **kwargs) -> int:
         self._check_permissions({"create_patient_information"})
 
+        patient_information = forms_wrapper.PatientInformation()
+
         try:
             user = auth.User.get_by_id(user_id)
         except auth.User.DoesNotExist:
             raise NotFound("User not found")
-
-        patient_information = forms_wrapper.PatientInformation()
 
         return patient_information.create(user=user, **kwargs)
 
@@ -279,6 +279,14 @@ class User:
     ) -> int:
         self._check_permissions({f"create_{form_t.value}_form"})
 
+        if form_t is forms_wrapper.FormTypes.SociodemographicEvaluation:
+            form = forms_wrapper.SociodemographicEvaluation()
+        elif form_t is forms_wrapper.FormTypes.KineticFunctionalEvaluation:
+            form = forms_wrapper.KineticFunctionalEvaluation()
+        else:
+            # This is indeed an internal server error.
+            raise NotImplementedError("Unexpected form type")
+
         try:
             patient_information = forms.PatientInformation.get_by_id(
                 patient_information_id
@@ -286,15 +294,7 @@ class User:
         except forms.PatientInformation.DoesNotExist:
             raise NotFound("User not found")
 
-        if form_t is forms_wrapper.FormTypes.SociodemographicEvaluation:
-            pass
-        elif form_t is forms_wrapper.FormTypes.KineticFunctionalEvaluation:
-            pass
-        else:
-            # This is indeed an internal server error.
-            raise NotImplementedError("Unexpected form type")
-
-        pass
+        return form.create(patient_information=patient_information, **kwargs)
 
     def get_serialized_form(
         self, form_t: forms_wrapper.FormTypes, form_id: int
@@ -302,27 +302,27 @@ class User:
         self._check_permissions({f"read_{form_t.value}_form_data"})
 
         if form_t is forms_wrapper.FormTypes.SociodemographicEvaluation:
-            pass
+            form = forms_wrapper.SociodemographicEvaluation(form_id)
         elif form_t is forms_wrapper.FormTypes.KineticFunctionalEvaluation:
-            pass
+            form = forms_wrapper.KineticFunctionalEvaluation(form_id)
         else:
             # This is indeed an internal server error.
             raise NotImplementedError("Unexpected form type")
 
-        pass
+        form.serialized()
 
     def update_form(self, form_t: forms_wrapper.FormTypes, form_id: int, **kwargs):
         self._check_permissions({f"change_{form_t.value}_form_data"})
 
         if form_t is forms_wrapper.FormTypes.SociodemographicEvaluation:
-            pass
+            form = forms_wrapper.SociodemographicEvaluation(form_id)
         elif form_t is forms_wrapper.FormTypes.KineticFunctionalEvaluation:
-            pass
+            form = forms_wrapper.KineticFunctionalEvaluation(form_id)
         else:
             # This is indeed an internal server error.
             raise NotImplementedError("Unexpected form type")
 
-        pass
+        form.update(**kwargs)
 
     def _check_permissions(self, required_permissions: Set[str]):
         if len(required_permissions.difference(self._permissions)) > 0:
