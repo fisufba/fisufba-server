@@ -97,11 +97,12 @@ class User:
             except peewee.IntegrityError:
                 continue
 
-        query = auth.User.update(last_login=datetime.datetime.utcnow()).where(
+        now = datetime.datetime.utcnow()
+        query = auth.User.update(last_login=now, updated_at=now).where(
             auth.User.id == self.id
         )
         if query.execute() == 0:
-            auth.Session.update(expire_date=datetime.datetime.utcnow()).where(
+            auth.Session.update(expire_date=now, updated_at=now).where(
                 auth.Session.token == session_token
             )
             # This is indeed an internal server error.
@@ -130,10 +131,9 @@ class User:
             The id of the created auth.User.
 
         """
-        if not utils.is_valid_cpf(cpf):
-            raise BadRequest("Invalid cpf")
-        if email is not None and not utils.is_valid_email(email):
-            raise BadRequest("Invalid email")
+        creation_kwargs = self._convert_kwarg_values(
+            cpf=cpf, password=password, display_name=display_name, email=email
+        )
 
         user_groups = auth.Group.select().where(auth.Group.name.in_(user_group_names))
         if len(user_groups) != len(user_group_names):
@@ -142,19 +142,10 @@ class User:
         required_permissions = set(
             f"create_{group_name}" for group_name in user_group_names
         )
-        if len(required_permissions.difference(self._permissions)) > 0:
-            raise Forbidden("Not enough permission")
+        self._check_permissions(required_permissions)
 
         try:
-            user = auth.User.create(
-                cpf=utils.unmask_cpf(cpf),
-                password=bcrypt.hashpw(
-                    password.encode("utf-8"), bcrypt.gensalt()
-                ).decode("utf-8"),
-                display_name=display_name,
-                email=email,
-                is_verified=None if email is None else False,
-            )
+            user = auth.User.create(**creation_kwargs)
         except peewee.IntegrityError:
             raise Conflict("User already exists")
 
@@ -189,8 +180,7 @@ class User:
         required_permissions = set(
             f"read_{group_name}_data" for group_name in user_group_names
         )
-        if len(required_permissions.difference(self._permissions)) > 0:
-            raise Forbidden("Not enough permission")
+        self._check_permissions(required_permissions)
 
         try:
             user = auth.User.get_by_id(user_id)
@@ -202,14 +192,20 @@ class User:
             cpf=utils.mask_cpf(user.cpf),
             display_name=user.display_name,
             email=user.email,
-            is_active=user.is_active,
-            is_verified=user.is_verified,
-            last_login=None if user.last_login is None else user.last_login.isoformat(),
             groups=list(user_group_names),
+            last_login=None if user.last_login is None else user.last_login.isoformat(),
+            verified_at=None
+            if user.verified_at is None
+            else user.verified_at.isoformat(),
+            deactivated_at=None
+            if user.deactivated_at is None
+            else user.deactivated_at.isoformat(),
+            updated_at=None if user.updated_at is None else user.updated_at.isoformat(),
+            created_at=None if user.created_at is None else user.created_at.isoformat(),
         )
 
     def update_user(self, user_id: int, **kwargs):
-        """Retrieves an auth.User from the database.
+        """Updates an auth.User in the database.
 
         Args:
             user_id: the id of the target auth.User.
@@ -220,6 +216,8 @@ class User:
                 email: the new auth.User's email.
 
         """
+        update_kwargs = self._convert_kwarg_values(**kwargs)
+
         user_group_names = set(
             group.name
             for group in auth.Group.select(auth.Group.name)
@@ -232,29 +230,11 @@ class User:
         required_permissions = set(
             f"change_{group_name}_data" for group_name in user_group_names
         )
-        if len(required_permissions.difference(self._permissions)) > 0:
-            raise Forbidden("Forbidden")
+        self._check_permissions(required_permissions)
 
-        kwargs = dict(kwargs)
-        valid_keys = {"cpf", "password", "display_name", "email"}
-        for key in kwargs:
-            assert key in valid_keys
-
-        if "cpf" in kwargs:
-            if not utils.is_valid_cpf(kwargs["cpf"]):
-                raise BadRequest("Invalid cpf")
-            kwargs["cpf"] = utils.unmask_cpf(kwargs["cpf"])
-
-        if "password" in kwargs:
-            kwargs["password"] = bcrypt.hashpw(
-                kwargs["password"].encode("utf-8"), bcrypt.gensalt()
-            ).decode("utf-8")
-
-        if "email" in kwargs and kwargs["email"] is not None:
-            if not utils.is_valid_email(kwargs["email"]):
-                raise BadRequest("Invalid email")
-
-        query = auth.User.update(**kwargs).where(auth.User.id == user_id)
+        query = auth.User.update(
+            **update_kwargs, updated_at=datetime.datetime.utcnow()
+        ).where(auth.User.id == user_id)
         if query.execute() == 0:
             # Is this an internal server error?
             raise Exception("Not updated")
@@ -262,7 +242,16 @@ class User:
         if user_id == self.id:
             self._restore()
 
-    def create_form(self, form_t: FormTypes, **kwargs) -> int:
+    def create_patient_information(self, user_id: int, **kwargs) -> int:
+        pass
+
+    def get_serialized_patient_information(self, patient_information_id: int) -> dict:
+        pass
+
+    def update_patient_information(self, patient_information_id: int, **kwargs):
+        pass
+
+    def create_form(self, user_id: int, form_t: FormTypes, **kwargs) -> int:
         pass
 
     def get_serialized_form(self, form_t: FormTypes, form_id: int) -> dict:
@@ -270,6 +259,22 @@ class User:
 
     def update_form(self, form_t: FormTypes, form_id: int, **kwargs):
         pass
+
+    def _check_permissions(self, required_permissions: Set[str]):
+        if len(required_permissions.difference(self._permissions)) > 0:
+            raise Forbidden("Not enough permission")
+
+    def _convert_kwarg_values(self, **kwargs):
+        self._validate_kwargs(**kwargs)
+        if "cpf" in kwargs:
+            kwargs["cpf"] = utils.unmask_cpf(kwargs["cpf"])
+
+        if "password" in kwargs:
+            kwargs["password"] = bcrypt.hashpw(
+                kwargs["password"].encode("utf-8"), bcrypt.gensalt()
+            ).decode("utf-8")
+
+        return kwargs
 
     def _restore(self):
         try:
@@ -281,6 +286,23 @@ class User:
         self.cpf = utils.mask_cpf(self._user.cpf)
         self.display_name = self._user.display_name
         self.email = self._user.email
+
+    def _validate_kwargs(self, **kwargs):
+        valid_kwargs = {"cpf", "password", "display_name", "email"}
+        for kwarg in kwargs.keys():
+            if kwarg not in valid_kwargs:
+                # This is indeed an internal server error.
+                raise TypeError(f"{kwarg} is not a valid keyword argument")
+
+        if "cpf" in kwargs:
+            if not utils.is_valid_cpf(kwargs["cpf"]):
+                raise BadRequest("invalid cpf")
+
+        if "email" in kwargs:
+            if kwargs["email"] is not None and not utils.is_valid_email(
+                kwargs["email"]
+            ):
+                raise BadRequest("invalid email")
 
 
 class Session:
@@ -320,7 +342,8 @@ class Session:
         """Updates the expire_date of this Session representation in the database for uctnow.
 
         """
-        query = auth.Session.update(expire_date=datetime.datetime.utcnow()).where(
+        now = datetime.datetime.utcnow()
+        query = auth.Session.update(expire_date=now, updated_at=now).where(
             auth.Session.id == self._session.id
         )
         if query.execute() == 0:
