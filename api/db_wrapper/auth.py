@@ -7,8 +7,8 @@ import peewee
 from werkzeug.exceptions import BadRequest, Conflict, Forbidden, NotFound
 
 import utils
-from api.db_wrapper._forms import FormTypes
-from db.models import auth
+import api.db_wrapper._forms as forms_wrapper
+from db.models import auth, forms
 
 
 class User:
@@ -249,21 +249,79 @@ class User:
             self._restore()
 
     def create_patient_information(self, user_id: int, **kwargs) -> int:
-        pass
+        self._check_permissions({"create_patient_information"})
+
+        try:
+            user = auth.User.get_by_id(user_id)
+        except auth.User.DoesNotExist:
+            raise NotFound("User not found")
+
+        patient_information = forms_wrapper.PatientInformation()
+
+        return patient_information.create(user=user, **kwargs)
 
     def get_serialized_patient_information(self, patient_information_id: int) -> dict:
-        pass
+        self._check_permissions({"read_patient_information_data"})
+
+        patient_information = forms_wrapper.PatientInformation(patient_information_id)
+
+        return patient_information.serialized()
 
     def update_patient_information(self, patient_information_id: int, **kwargs):
+        self._check_permissions({"change_patient_information_data"})
+
+        patient_information = forms_wrapper.PatientInformation(patient_information_id)
+
+        patient_information.update(**kwargs)
+
+    def create_form(
+        self, patient_information_id: int, form_t: forms_wrapper.FormTypes, **kwargs
+    ) -> int:
+        self._check_permissions({f"create_{form_t.value}_form"})
+
+        try:
+            patient_information = forms.PatientInformation.get_by_id(
+                patient_information_id
+            )
+        except forms.PatientInformation.DoesNotExist:
+            raise NotFound("User not found")
+
+        if form_t is forms_wrapper.FormTypes.SociodemographicEvaluation:
+            pass
+        elif form_t is forms_wrapper.FormTypes.KineticFunctionalEvaluation:
+            pass
+        else:
+            # This is indeed an internal server error.
+            raise NotImplementedError("Unexpected form type")
+
         pass
 
-    def create_form(self, user_id: int, form_t: FormTypes, **kwargs) -> int:
+    def get_serialized_form(
+        self, form_t: forms_wrapper.FormTypes, form_id: int
+    ) -> dict:
+        self._check_permissions({f"read_{form_t.value}_form_data"})
+
+        if form_t is forms_wrapper.FormTypes.SociodemographicEvaluation:
+            pass
+        elif form_t is forms_wrapper.FormTypes.KineticFunctionalEvaluation:
+            pass
+        else:
+            # This is indeed an internal server error.
+            raise NotImplementedError("Unexpected form type")
+
         pass
 
-    def get_serialized_form(self, form_t: FormTypes, form_id: int) -> dict:
-        pass
+    def update_form(self, form_t: forms_wrapper.FormTypes, form_id: int, **kwargs):
+        self._check_permissions({f"change_{form_t.value}_form_data"})
 
-    def update_form(self, form_t: FormTypes, form_id: int, **kwargs):
+        if form_t is forms_wrapper.FormTypes.SociodemographicEvaluation:
+            pass
+        elif form_t is forms_wrapper.FormTypes.KineticFunctionalEvaluation:
+            pass
+        else:
+            # This is indeed an internal server error.
+            raise NotImplementedError("Unexpected form type")
+
         pass
 
     def _check_permissions(self, required_permissions: Set[str]):

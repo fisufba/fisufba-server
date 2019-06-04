@@ -229,5 +229,5 @@ class Form(ABC):
 
 
 class FormTypes(enum.Enum):
-    SociodemographicEvaluation = "sociodemographicevaluation"
-    KineticFunctionalEvaluation = "kineticfunctionalevaluation"
+    SociodemographicEvaluation = "sociodemographic_evaluation"
+    KineticFunctionalEvaluation = "kinetic_functional_evaluation"
