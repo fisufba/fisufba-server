@@ -52,6 +52,14 @@ class FormsIndex(AppResource):
             "_links": {
                 "self": {"href": url_for("formsindex")},
                 "curies": [{"name": "forms", "href": "TODO/{rel}", "templated": True}],
+                "forms:_patientinformation": {
+                    "href": url_for("_patientinformation"),
+                    "templated": True,
+                },
+                "forms:_patientinformationview": {
+                    "href": url_for("_patientinformationview", form_id=0),
+                    "templated": True,
+                },
                 "forms:_sociodemographicevaluation": {
                     "href": url_for("_sociodemographicevaluation"),
                     "templated": True,
@@ -69,6 +77,238 @@ class FormsIndex(AppResource):
                     "templated": True,
                 },
             }
+        }
+
+
+class _PatientInformation(AppResource):
+
+    @classmethod
+    def get_path(cls):
+        """Returns the url path of this AppResource.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            An url path.
+
+        """
+        return "/forms/patientinformation"
+
+    @classmethod
+    def get_dependencies(cls):
+        """Returns the dependencies of this AppResource.
+
+        Notes:
+            If there's no dependency this must return an empty set.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            A set of module names that contains AppResource
+                classes used by this AppResource.
+
+        """
+        return set()
+
+    @authentication_required
+    def post(self):
+
+        post_body = request.get_json()
+
+        try:
+            user_id = post_body["user_id"]
+        except KeyError:
+            raise BadRequest("user_id field is missing")
+
+        try:
+            gender = post_body["gender"]
+        except KeyError:
+            raise BadRequest("gender field is missing")
+
+        try:
+            birthday = post_body["birthday"]
+        except KeyError:
+            raise BadRequest("birthday field is missing")
+
+        try:
+            phone = post_body["phone"]
+        except KeyError:
+            raise BadRequest("phone field is missing")
+
+        try:
+            acquaintance_phone = post_body["acquaintance_phone"]
+        except KeyError:
+            raise BadRequest("acquaintance_phone field is missing")
+
+        try:
+            address = post_body["address"]
+        except KeyError:
+            raise BadRequest("address field is missing")
+
+        try:
+            neighborhood = post_body["neighborhood"]
+        except KeyError:
+            raise BadRequest("neighborhood field is missing")
+
+        try:
+            city = post_body["city"]
+        except KeyError:
+            raise BadRequest("city field is missing")
+
+        try:
+            country = post_body["country"]
+        except KeyError:
+            raise BadRequest("country field is missing")
+
+        if not isinstance(user_id, int):
+            raise BadRequest("patient_information_id is not an integer")
+        if not isinstance(gender, str):
+            raise BadRequest("gender is not a string")
+        if not isinstance(birthday, str):
+            raise BadRequest("birthday is not a string")
+        if not isinstance(phone, str):
+            raise BadRequest("phone is not a string")
+        if not isinstance(acquaintance_phone, str):
+            raise BadRequest("acquaintance_phone is not a string")
+        if not isinstance(address, str):
+            raise BadRequest("address is not a string")
+        if not isinstance(neighborhood, str):
+            raise BadRequest("neighborhood is not a string")
+        if not isinstance(city, str):
+            raise BadRequest("city is not a string")
+        if not isinstance(country, str):
+            raise BadRequest("country is not a string")
+
+        form_id = g.session.user.create_form(
+            FormTypes("patient information"),
+            user_id=user_id,
+            gender=gender,
+            birthday=birthday,
+            phone=phone,
+            acquaintance_phone=acquaintance_phone,
+            address=address,
+            neighborhood=neighborhood,
+            city=city,
+            country=country
+        )
+
+        return {
+            "_links": {"self": {"href": url_for("_patientinformation")}},
+            "form_id": form_id,
+        }
+
+
+class _PatientInformationView(AppResource):
+
+    @classmethod
+    def get_path(cls):
+        """Returns the url path of this AppResource.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            An url path.
+
+        """
+        return "/forms/patientinformation/<int:form_id>"
+
+    @classmethod
+    def get_dependencies(cls):
+        """Returns the dependencies of this AppResource.
+
+        Notes:
+            If there's no dependency this must return an empty set.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            A set of module names that contains AppResource
+                classes used by this AppResource.
+
+        """
+        return set()
+
+    @authentication_required
+    def get(self, form_id: int):
+        return {
+            "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
+            "form": g.session.user.get_serialized_form(
+                form_t=FormTypes("patient information"), form_id=form_id
+            ),
+        }
+
+    @authentication_required
+    def patch(self, form_id: int):
+        patch_body = request.get_json()
+
+        kwargs = {}
+
+        if "gender" in patch_body:
+            gender = patch_body["gender"]
+            if not isinstance(gender, str):
+                raise BadRequest("gender is not a string")
+            kwargs["gender"] = gender
+
+        if "birthday" in patch_body:
+            birthday = patch_body["birthday"]
+            if not isinstance(birthday, str):
+                raise BadRequest("birthday is not a string")
+            kwargs["birthday"] = datetime.strftime(
+                birthday, "%d/%m/%Y"
+            ).isoformat()
+            kwargs["birthday"] = birthday
+
+        if "phone" in patch_body:
+            phone = patch_body["phone"]
+            if not isinstance(phone, str):
+                raise BadRequest("phone is not a string")
+            kwargs["phone"] = phone
+
+        if "acquaintance_phone" in patch_body:
+            acquaintance_phone = patch_body["acquaintance_phone"]
+            if not isinstance(acquaintance_phone, str):
+                raise BadRequest("acquaintance_phone is not a string")
+            kwargs["acquaintance_phone"] = acquaintance_phone
+
+        if "address" in patch_body:
+            address = patch_body["address"]
+            if not isinstance(address, str):
+                raise BadRequest("address is not a string")
+            kwargs["address"] = address
+
+        if "neighborhood" in patch_body:
+            neighborhood = patch_body["neighborhood"]
+            if not isinstance(neighborhood, str):
+                raise BadRequest("neighborhood is not a string")
+            kwargs["neighborhood"] = neighborhood
+
+        if "city" in patch_body:
+            city = patch_body["city"]
+            if not isinstance(city, str):
+                raise BadRequest("city is not a string")
+            kwargs["city"] = city
+
+        if "country" in patch_body:
+            country = patch_body["country"]
+            if not isinstance(country, str):
+                raise BadRequest("country is not a string")
+            kwargs["country"] = country
+
+        g.session.user.update_form(
+            form_t=FormTypes("patient information"), form_id=form_id, **kwargs
+        )
+
+        return {
+            "_links": {
+                "self": {
+                    "href": url_for("_patientinformationview", form_id=form_id)
+                }
+            },
+            "form_id": form_id,
         }
 
 
@@ -466,45 +706,45 @@ class _KineticFunctionalEvaluation(AppResource):
         if not isinstance(functional_history, str):
             raise BadRequest("functional_history field is not a string")
         if structure_and_function is not None and not isinstance(
-            structure_and_function, str
+                structure_and_function, str
         ):
             raise BadRequest("structure_and_function field is not a string")
         if activity_and_participation is not None and not isinstance(
-            activity_and_participation, str
+                activity_and_participation, str
         ):
             raise BadRequest("activity_and_participation field is not a string")
         if physical_functional_tests_results is not None and not isinstance(
-            physical_functional_tests_results, str
+                physical_functional_tests_results, str
         ):
             raise BadRequest("physical_functional_tests_results field is not a string")
         if complementary_exams_results is not None and not isinstance(
-            complementary_exams_results, str
+                complementary_exams_results, str
         ):
             raise BadRequest("complementary_exams_results field is not a string")
         if deficiency_diagnosis is not None and not isinstance(
-            deficiency_diagnosis, str
+                deficiency_diagnosis, str
         ):
             raise BadRequest("deficiency_diagnosis field is not a string")
         if activity_limitation_diagnosis is not None and not isinstance(
-            activity_limitation_diagnosis, str
+                activity_limitation_diagnosis, str
         ):
             raise BadRequest("activity_limitation_diagnosis field is not a string")
         if participation_restriction_diagnosis is not None and not isinstance(
-            participation_restriction_diagnosis, str
+                participation_restriction_diagnosis, str
         ):
             raise BadRequest(
                 "participation_restriction_diagnosis field is not a string"
             )
         if environment_factors_diagnosis is not None and not isinstance(
-            environment_factors_diagnosis, str
+                environment_factors_diagnosis, str
         ):
             raise BadRequest("environment_factors_diagnosis field is not an list")
         if functional_objectives_diagnosis is not None and not isinstance(
-            functional_objectives_diagnosis, list
+                functional_objectives_diagnosis, list
         ):
             raise BadRequest("functional_objectives_diagnosis field is not an list")
         if therapeutic_plan_diagnosis is not None and not isinstance(
-            therapeutic_plan_diagnosis, list
+                therapeutic_plan_diagnosis, list
         ):
             raise BadRequest("therapeutic_plan_diagnosis field is not an list")
         if reevaluation_dates is not None and not isinstance(reevaluation_dates, list):
@@ -749,3 +989,39 @@ class _KineticFunctionalEvaluationView(AppResource):
             },
             "form_id": form_id,
         }
+
+
+class _GoniometryEvaluation(AppResource):
+    """AppResource responsible for GoniometryEvaluation form creation.
+
+        """
+
+    @classmethod
+    def get_path(cls):
+        """Returns the url path of this AppResource.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            An url path.
+
+        """
+        return "/forms/goniometryevaluation"
+
+    @classmethod
+    def get_dependencies(cls):
+        """Returns the dependencies of this AppResource.
+
+        Notes:
+            If there's no dependency this must return an empty set.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            A set of module names that contains AppResource
+                classes used by this AppResource.
+
+        """
+        return set()
