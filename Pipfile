@@ -9,12 +9,16 @@ pytest = "*"
 
 [packages]
 peewee = "*"
-psycopg2 = "*"
+psycopg2 = "==2.7.5"
 python-dateutil = "*"
 flask = "*"
 flask-restful = "*"
 bcrypt = "*"
 gunicorn = "*"
+psycopg = "==2.7.5"
+werkzeug = "==0.15.4"
+psycopg2-binary = "*"
+black = "*"
 
 [requires]
 python_version = "3.7"

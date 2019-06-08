@@ -68,12 +68,20 @@ class FormsIndex(AppResource):
                     "href": url_for("_sociodemographicevaluationview", form_id=0),
                     "templated": True,
                 },
-                "forms:kineticfunctionalevaluation": {
+                "forms:_kineticfunctionalevaluation": {
                     "href": url_for("_kineticfunctionalevaluation"),
                     "templated": True,
                 },
-                "forms:kineticfunctionalevaluationview": {
+                "forms:_kineticfunctionalevaluationview": {
                     "href": url_for("_kineticfunctionalevaluationview", form_id=0),
+                    "templated": True,
+                },
+                "forms:_goniometryevaluation": {
+                    "href": url_for("_goniometryevaluation"),
+                    "templated": True,
+                },
+                "forms:_goniometryevaluationview": {
+                    "href": url_for("_goniometryevaluationview", form_id=0),
                     "templated": True,
                 },
             }
@@ -81,7 +89,6 @@ class FormsIndex(AppResource):
 
 
 class _PatientInformation(AppResource):
-
     @classmethod
     def get_path(cls):
         """Returns the url path of this AppResource.
@@ -191,7 +198,7 @@ class _PatientInformation(AppResource):
             address=address,
             neighborhood=neighborhood,
             city=city,
-            country=country
+            country=country,
         )
 
         return {
@@ -201,7 +208,6 @@ class _PatientInformation(AppResource):
 
 
 class _PatientInformationView(AppResource):
-
     @classmethod
     def get_path(cls):
         """Returns the url path of this AppResource.
@@ -257,9 +263,7 @@ class _PatientInformationView(AppResource):
             birthday = patch_body["birthday"]
             if not isinstance(birthday, str):
                 raise BadRequest("birthday is not a string")
-            kwargs["birthday"] = datetime.strftime(
-                birthday, "%d/%m/%Y"
-            ).isoformat()
+            kwargs["birthday"] = datetime.strftime(birthday, "%d/%m/%Y").isoformat()
             kwargs["birthday"] = birthday
 
         if "phone" in patch_body:
@@ -304,9 +308,7 @@ class _PatientInformationView(AppResource):
 
         return {
             "_links": {
-                "self": {
-                    "href": url_for("_patientinformationview", form_id=form_id)
-                }
+                "self": {"href": url_for("_patientinformationview", form_id=form_id)}
             },
             "form_id": form_id,
         }
@@ -706,45 +708,45 @@ class _KineticFunctionalEvaluation(AppResource):
         if not isinstance(functional_history, str):
             raise BadRequest("functional_history field is not a string")
         if structure_and_function is not None and not isinstance(
-                structure_and_function, str
+            structure_and_function, str
         ):
             raise BadRequest("structure_and_function field is not a string")
         if activity_and_participation is not None and not isinstance(
-                activity_and_participation, str
+            activity_and_participation, str
         ):
             raise BadRequest("activity_and_participation field is not a string")
         if physical_functional_tests_results is not None and not isinstance(
-                physical_functional_tests_results, str
+            physical_functional_tests_results, str
         ):
             raise BadRequest("physical_functional_tests_results field is not a string")
         if complementary_exams_results is not None and not isinstance(
-                complementary_exams_results, str
+            complementary_exams_results, str
         ):
             raise BadRequest("complementary_exams_results field is not a string")
         if deficiency_diagnosis is not None and not isinstance(
-                deficiency_diagnosis, str
+            deficiency_diagnosis, str
         ):
             raise BadRequest("deficiency_diagnosis field is not a string")
         if activity_limitation_diagnosis is not None and not isinstance(
-                activity_limitation_diagnosis, str
+            activity_limitation_diagnosis, str
         ):
             raise BadRequest("activity_limitation_diagnosis field is not a string")
         if participation_restriction_diagnosis is not None and not isinstance(
-                participation_restriction_diagnosis, str
+            participation_restriction_diagnosis, str
         ):
             raise BadRequest(
                 "participation_restriction_diagnosis field is not a string"
             )
         if environment_factors_diagnosis is not None and not isinstance(
-                environment_factors_diagnosis, str
+            environment_factors_diagnosis, str
         ):
             raise BadRequest("environment_factors_diagnosis field is not an list")
         if functional_objectives_diagnosis is not None and not isinstance(
-                functional_objectives_diagnosis, list
+            functional_objectives_diagnosis, list
         ):
             raise BadRequest("functional_objectives_diagnosis field is not an list")
         if therapeutic_plan_diagnosis is not None and not isinstance(
-                therapeutic_plan_diagnosis, list
+            therapeutic_plan_diagnosis, list
         ):
             raise BadRequest("therapeutic_plan_diagnosis field is not an list")
         if reevaluation_dates is not None and not isinstance(reevaluation_dates, list):
@@ -1025,3 +1027,38 @@ class _GoniometryEvaluation(AppResource):
 
         """
         return set()
+
+    @authentication_required
+    def post(self):
+
+        post_body = request.get_json()
+
+        # Assuming the data will be a list in JSON
+        # This list is a list of lists and each list represents a measured articulation [[data1], [data2], ...]
+        # Each measured articulation list contains the name of the measured articulation and
+        # a list of days containing the left and right description {"articulation_name", days: [[day1], [day2], ...]]
+
+        try:
+            user_id = post_body["user_id"]
+        except KeyError:
+            raise BadRequest("user_id field is missing")
+
+        try:
+            data = post_body["data"]
+        except KeyError:
+            raise BadRequest("data1 field is missing")
+
+        if not isinstance(user_id, int):
+            raise BadRequest("user_id field is not a string")
+
+        if not isinstance(data, dict):
+            raise BadRequest("user_id field is not a string")
+
+        form_id = g.session.user.create_form(
+            FormTypes("goniometry evaluation"), user_id=user_id, data=data
+        )
+
+        return {
+            "_links": {"self": {"href": url_for("_goniometryevaluation")}},
+            "form_id": form_id,
+        }
