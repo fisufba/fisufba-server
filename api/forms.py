@@ -52,35 +52,35 @@ class FormsIndex(AppResource):
             "_links": {
                 "self": {"href": url_for("formsindex")},
                 "curies": [{"name": "forms", "href": "TODO/{rel}", "templated": True}],
-                "forms:_patientinformation": {
+                "forms:patientinformation": {
                     "href": url_for("_patientinformation"),
                     "templated": True,
                 },
-                "forms:_patientinformationview": {
+                "forms:patientinformationview": {
                     "href": url_for("_patientinformationview", form_id=0),
                     "templated": True,
                 },
-                "forms:_sociodemographicevaluation": {
+                "forms:sociodemographicevaluation": {
                     "href": url_for("_sociodemographicevaluation"),
                     "templated": True,
                 },
-                "forms:_sociodemographicevaluationview": {
+                "forms:sociodemographicevaluationview": {
                     "href": url_for("_sociodemographicevaluationview", form_id=0),
                     "templated": True,
                 },
-                "forms:_kineticfunctionalevaluation": {
+                "forms:kineticfunctionalevaluation": {
                     "href": url_for("_kineticfunctionalevaluation"),
                     "templated": True,
                 },
-                "forms:_kineticfunctionalevaluationview": {
+                "forms:kineticfunctionalevaluationview": {
                     "href": url_for("_kineticfunctionalevaluationview", form_id=0),
                     "templated": True,
                 },
-                "forms:_goniometryevaluation": {
+                "forms:goniometryevaluation": {
                     "href": url_for("_goniometryevaluation"),
                     "templated": True,
                 },
-                "forms:_goniometryevaluationview": {
+                "forms:goniometryevaluationview": {
                     "href": url_for("_goniometryevaluationview", form_id=0),
                     "templated": True,
                 },
@@ -975,7 +975,9 @@ class _KineticFunctionalEvaluationView(AppResource):
                 raise BadRequest("preceptor_assessor field is not a string")
             kwargs["preceptor_assessor"] = preceptor_assessor
 
-        g.session.user.update_form(FormTypes("kineticfunctional"), form_id=form_id, **kwargs)
+        g.session.user.update_form(
+            FormTypes("kineticfunctional"), form_id=form_id, **kwargs
+        )
 
         return {
             "_links": {
@@ -1054,7 +1056,6 @@ class _GoniometryEvaluation(AppResource):
 
 
 class _GoniometryEvaluationView(AppResource):
-
     @classmethod
     def get_path(cls):
         """Returns the url path of this AppResource.
@@ -1106,13 +1107,13 @@ class _GoniometryEvaluationView(AppResource):
                 raise BadRequest("data field is not a dict")
             kwargs["data"] = data
 
-        g.session.user.update_form(FormTypes("goniometry evaluation"), form_id=form_id, **kwargs)
+        g.session.user.update_form(
+            FormTypes("goniometry evaluation"), form_id=form_id, **kwargs
+        )
 
         return {
             "_links": {
-                "self": {
-                    "href": url_for("_goniometryevaluationview", form_id=form_id)
-                }
+                "self": {"href": url_for("_goniometryevaluationview", form_id=form_id)}
             },
             "form_id": form_id,
         }
