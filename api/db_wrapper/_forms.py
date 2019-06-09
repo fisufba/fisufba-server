@@ -22,7 +22,7 @@ class PatientInformation:
         self,
         user: auth.User,
         gender: str,
-        birthday: datetime.datetime,
+        birthday: str,
         acquaintance_phone: str,
         address: str,
         neighborhood: str,
@@ -106,6 +106,11 @@ class PatientInformation:
         if "gender" in kwargs:
             kwargs["gender"] = forms.PatientInformation.GenderTypes(kwargs["gender"])
 
+        if "birthday" in kwargs:
+            kwargs["birthday"] = datetime.datetime.strptime(
+                kwargs["birthday"], "%d/%m/%Y"
+            )
+
         return kwargs
 
     def _restore(self):
@@ -142,6 +147,12 @@ class PatientInformation:
             )
             if kwargs["gender"] not in gender_types:
                 raise BadRequest("invalid gender")
+
+        if "birthday" in kwargs:
+            try:
+                _ = datetime.datetime.strptime(kwargs["birthday"], "%d/%m/%Y")
+            except ValueError:
+                raise BadRequest("birthday date is malformed")
 
 
 class Form(ABC):
