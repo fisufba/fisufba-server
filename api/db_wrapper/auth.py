@@ -142,6 +142,9 @@ class User:
             email=email,
         )
 
+        if not all(isinstance(name, str) for name in user_group_names):
+            raise BadRequest("invalid group name in user_group_names")
+
         creation_kwargs = self._convert_kwarg_values(
             cpf=cpf,
             password=password,
@@ -342,9 +345,6 @@ class User:
             raise Forbidden("Not enough permission")
 
     def _convert_kwarg_values(self, **kwargs):
-        if "cpf" in kwargs:
-            kwargs["cpf"] = kwargs["cpf"]
-
         if "password" in kwargs:
             kwargs["password"] = bcrypt.hashpw(
                 kwargs["password"].encode("utf-8"), bcrypt.gensalt()

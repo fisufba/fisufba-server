@@ -103,9 +103,6 @@ class _Signup(AppResource):
         if len(user_group_names) != len(set(user_group_names)):
             raise BadRequest("user_group_names contains duplicate names")
 
-        if not all(isinstance(name, str) for name in user_group_names):
-            raise BadRequest("invalid group name in user_group_names")
-
         user_id = g.session.user.create_user(
             cpf=cpf,
             password=password,
