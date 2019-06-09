@@ -1368,3 +1368,131 @@ class _AshworthView(AppResource):
             "_links": {"self": {"href": url_for("_ashworth", form_id=form_id)}},
             "form_id": form_id,
         }
+
+
+class _PainIntensity(AppResource):
+    """AppResource responsible for MuscleStrength form creation.
+
+        """
+
+    @classmethod
+    def get_path(cls):
+        """Returns the url path of this AppResource.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            An url path.
+
+        """
+        return "/forms/painintensity"
+
+    @classmethod
+    def get_dependencies(cls):
+        """Returns the dependencies of this AppResource.
+
+        Notes:
+            If there's no dependency this must return an empty set.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            A set of module names that contains AppResource
+                classes used by this AppResource.
+
+        """
+        return set()
+
+    @authentication_required
+    def post(self):
+
+        post_body = request.get_json()
+
+        try:
+            user_id = post_body["user_id"]
+        except KeyError:
+            raise BadRequest("user_id field is missing")
+
+        try:
+            data = post_body["data"]
+        except KeyError:
+            raise BadRequest("data field is missing")
+
+        if not isinstance(user_id, int):
+            raise BadRequest("user_id field is not an integer")
+
+        if not isinstance(data, dict):
+            raise BadRequest("data field is not a dict")
+
+        form_id = g.session.user.create_form(
+            FormTypes("pain intensity"), user_id=user_id, data=data
+        )
+
+        return {
+            "_links": {"self": {"href": url_for("_pain intensity")}},
+            "form_id": form_id,
+        }
+
+
+class _PainIntensityView(AppResource):
+    @classmethod
+    def get_path(cls):
+        """Returns the url path of this AppResource.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            An url path.
+
+        """
+        return "/forms/painintensity/<int:form_id>"
+
+    @classmethod
+    def get_dependencies(cls):
+        """Returns the dependencies of this AppResource.
+
+        Notes:
+            If there's no dependency this must return an empty set.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            A set of module names that contains AppResource
+                classes used by this AppResource.
+
+        """
+        return set()
+
+    @authentication_required
+    def get(self, form_id: int):
+        return {
+            "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
+            "form": g.session.user.get_serialized_form(
+                form_t=FormTypes("pain intensity"), form_id=form_id
+            ),
+        }
+
+    @authentication_required
+    def patch(self, form_id: int):
+        patch_body = request.get_json()
+
+        kwargs = {}
+
+        if "data" in patch_body:
+            data = patch_body["data"]
+            if not isinstance(data, dict):
+                raise BadRequest("data field is not a dict")
+            kwargs["data"] = data
+
+        g.session.user.update_form(
+            FormTypes("pain intensity"), form_id=form_id, **kwargs
+        )
+
+        return {
+            "_links": {"self": {"href": url_for("_painintensity", form_id=form_id)}},
+            "form_id": form_id,
+        }
