@@ -45,7 +45,7 @@ class User:
                 raise BadRequest("Invalid cpf")
 
             try:
-                _user = auth.User.get(cpf=utils.unmask_cpf(cpf))
+                _user = auth.User.get(cpf=cpf)
             except auth.User.DoesNotExist:
                 raise Forbidden("User does not exist")
 
@@ -59,8 +59,9 @@ class User:
 
         self._user = _user
         self.id = self._user.id
-        self.cpf = utils.mask_cpf(self._user.cpf)
+        self.cpf = self._user.cpf
         self.display_name = self._user.display_name
+        self.phone = self._user.phone
         self.email = self._user.email
 
         self._group_names = set(
@@ -115,6 +116,7 @@ class User:
         cpf: str,
         password: str,
         display_name: str,
+        phone: str,
         email: str,
         user_group_names: Set[str],
     ) -> int:
@@ -124,6 +126,7 @@ class User:
             cpf: the auth.User's CPF.
             password: the auth.User's password.
             display_name: the auth.User's display name.
+            phone: the auth.User's phone.
             email: the auth.User's email.
             user_group_names: the group names to which the auth.User belongs.
 
@@ -132,11 +135,19 @@ class User:
 
         """
         self._validate_kwargs(
-            cpf=cpf, password=password, display_name=display_name, email=email
+            cpf=cpf,
+            password=password,
+            display_name=display_name,
+            phone=phone,
+            email=email,
         )
 
         creation_kwargs = self._convert_kwarg_values(
-            cpf=cpf, password=password, display_name=display_name, email=email
+            cpf=cpf,
+            password=password,
+            display_name=display_name,
+            phone=phone,
+            email=email,
         )
 
         user_groups = auth.Group.select().where(auth.Group.name.in_(user_group_names))
@@ -193,8 +204,9 @@ class User:
 
         return dict(
             id=user.id,
-            cpf=utils.mask_cpf(user.cpf),
+            cpf=user.cpf,
             display_name=user.display_name,
+            phone=user.phone,
             email=user.email,
             groups=list(user_group_names),
             last_login=None if user.last_login is None else user.last_login.isoformat(),
@@ -217,6 +229,7 @@ class User:
                 cpf: the new auth.User's CPF.
                 password: the new auth.User's password.
                 display_name: the new auth.User's display name.
+                phone: the new auth.User's phone.
                 email: the new auth.User's email.
 
         """
@@ -330,7 +343,7 @@ class User:
 
     def _convert_kwarg_values(self, **kwargs):
         if "cpf" in kwargs:
-            kwargs["cpf"] = utils.unmask_cpf(kwargs["cpf"])
+            kwargs["cpf"] = kwargs["cpf"]
 
         if "password" in kwargs:
             kwargs["password"] = bcrypt.hashpw(
@@ -346,12 +359,13 @@ class User:
             # This is indeed an internal server error.
             raise Exception("User does not exist")
 
-        self.cpf = utils.mask_cpf(self._user.cpf)
+        self.cpf = self._user.cpf
         self.display_name = self._user.display_name
+        self.phone = self._user.phone
         self.email = self._user.email
 
     def _validate_kwargs(self, **kwargs):
-        valid_kwargs = {"cpf", "password", "display_name", "email"}
+        valid_kwargs = {"cpf", "password", "display_name", "phone", "email"}
         for kwarg in kwargs.keys():
             if kwarg not in valid_kwargs:
                 # This is indeed an internal server error.
@@ -360,6 +374,10 @@ class User:
         if "cpf" in kwargs:
             if not utils.is_valid_cpf(kwargs["cpf"]):
                 raise BadRequest("invalid cpf")
+
+        if "phone" in kwargs:
+            if not kwargs["phone"].isdigit():
+                raise BadRequest("invalid phone")
 
         if "email" in kwargs:
             if kwargs["email"] is not None and not utils.is_valid_email(

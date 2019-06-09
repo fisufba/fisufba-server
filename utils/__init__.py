@@ -1,8 +1,6 @@
 import os
 import configparser
 
-from utils.utils import mask_cpf
-from utils.utils import unmask_cpf
 from utils.validation import is_valid_cpf
 from utils.validation import is_valid_email
 

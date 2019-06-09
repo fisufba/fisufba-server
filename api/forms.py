@@ -140,11 +140,6 @@ class _PatientInformation(AppResource):
             raise BadRequest("birthday field is missing")
 
         try:
-            phone = post_body["phone"]
-        except KeyError:
-            raise BadRequest("phone field is missing")
-
-        try:
             acquaintance_phone = post_body["acquaintance_phone"]
         except KeyError:
             raise BadRequest("acquaintance_phone field is missing")
@@ -175,8 +170,6 @@ class _PatientInformation(AppResource):
             raise BadRequest("gender is not a string")
         if not isinstance(birthday, str):
             raise BadRequest("birthday is not a string")
-        if not isinstance(phone, str):
-            raise BadRequest("phone is not a string")
         if not isinstance(acquaintance_phone, str):
             raise BadRequest("acquaintance_phone is not a string")
         if not isinstance(address, str):
@@ -193,7 +186,6 @@ class _PatientInformation(AppResource):
             user_id=user_id,
             gender=gender,
             birthday=birthday,
-            phone=phone,
             acquaintance_phone=acquaintance_phone,
             address=address,
             neighborhood=neighborhood,
@@ -263,14 +255,7 @@ class _PatientInformationView(AppResource):
             birthday = patch_body["birthday"]
             if not isinstance(birthday, str):
                 raise BadRequest("birthday is not a string")
-            kwargs["birthday"] = datetime.strftime(birthday, "%d/%m/%Y").isoformat()
-            kwargs["birthday"] = birthday
-
-        if "phone" in patch_body:
-            phone = patch_body["phone"]
-            if not isinstance(phone, str):
-                raise BadRequest("phone is not a string")
-            kwargs["phone"] = phone
+            kwargs["birthday"] = datetime.strptime(birthday, "%d/%m/%Y")
 
         if "acquaintance_phone" in patch_body:
             acquaintance_phone = patch_body["acquaintance_phone"]

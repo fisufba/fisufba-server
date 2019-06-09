@@ -24,7 +24,6 @@ class PatientInformation(_BaseModel):
     gender = EnumField(GenderTypes)
     birthday = DateTimeField()
 
-    phone = CharField()
     acquaintance_phone = CharField()
 
     address = CharField()

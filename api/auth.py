@@ -72,6 +72,11 @@ class _Signup(AppResource):
             raise BadRequest("missing display_name field")
 
         try:
+            phone = post_body["phone"]
+        except KeyError:
+            raise BadRequest("phone field is missing")
+
+        try:
             email = post_body["email"]
         except KeyError:
             raise BadRequest("missing email field")
@@ -88,6 +93,8 @@ class _Signup(AppResource):
             raise BadRequest("password is not a string")
         if not isinstance(display_name, str):
             raise BadRequest("display_name is not a string")
+        if not isinstance(phone, str):
+            raise BadRequest("phone is not a string")
         if email is not None and not isinstance(email, str):
             raise BadRequest("email is not a string")
         if not isinstance(user_group_names, list):
@@ -103,6 +110,7 @@ class _Signup(AppResource):
             cpf=cpf,
             password=password,
             display_name=display_name,
+            phone=phone,
             email=email,
             user_group_names=set(user_group_names),
         )
@@ -345,6 +353,12 @@ class _Account(AppResource):
             if not isinstance(display_name, str):
                 raise Exception("Invalid display_name")  # TODO InvaliDisplayNameError.
             kwargs["display_name"] = display_name
+
+        if "phone" in request.form:
+            phone = request.form["phone"]
+            if not isinstance(phone, str):
+                raise Exception("phone is not a string")  # TODO InvaliDisplayNameError.
+            kwargs["phone"] = phone
 
         if "email" in request.form:
             email = request.form["email"]

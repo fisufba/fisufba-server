@@ -23,7 +23,6 @@ class PatientInformation:
         user: auth.User,
         gender: str,
         birthday: datetime.datetime,
-        phone: str,
         acquaintance_phone: str,
         address: str,
         neighborhood: str,
@@ -36,7 +35,6 @@ class PatientInformation:
         self._validate_kwargs(
             gender=gender,
             birthday=birthday,
-            phone=phone,
             acquaintance_phone=acquaintance_phone,
             address=address,
             neighborhood=neighborhood,
@@ -47,7 +45,6 @@ class PatientInformation:
         creation_kwargs = self._convert_kwarg_values(
             gender=gender,
             birthday=birthday,
-            phone=phone,
             acquaintance_phone=acquaintance_phone,
             address=address,
             neighborhood=neighborhood,
@@ -74,7 +71,6 @@ class PatientInformation:
             user_id=self._patient_information.user.id,
             gender=self._patient_information.gender.value,
             birthday=self._patient_information.birthday.isoformat(),
-            phone=self._patient_information.phone,
             acquaintance_phone=self._patient_information.acquaintance_phone,
             address=self._patient_information.address,
             neighborhood=self._patient_information.neighborhood,
@@ -129,7 +125,6 @@ class PatientInformation:
         valid_kwargs = {
             "gender",
             "birthday",
-            "phone",
             "acquaintance_phone",
             "address",
             "neighborhood",
