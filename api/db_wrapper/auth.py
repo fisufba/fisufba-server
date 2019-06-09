@@ -288,7 +288,7 @@ class User:
         patient_information.update(**kwargs)
 
     def create_form(
-        self, patient_information_id: int, form_t: forms_wrapper.FormTypes, **kwargs
+        self, form_t: forms_wrapper.FormTypes, patient_information_id: int, **kwargs
     ) -> int:
         self._check_permissions({f"create_{form_t.value}_form"})
 

@@ -57,7 +57,9 @@ class FormsIndex(AppResource):
                     "templated": True,
                 },
                 "forms:patientinformationview": {
-                    "href": url_for("_patientinformationview", form_id=0),
+                    "href": url_for(
+                        "_patientinformationview", patient_information_id=0
+                    ),
                     "templated": True,
                 },
                 "forms:sociodemographicevaluation": {
@@ -165,7 +167,7 @@ class _PatientInformation(AppResource):
             raise BadRequest("country field is missing")
 
         if not isinstance(user_id, int):
-            raise BadRequest("patient_information_id is not an integer")
+            raise BadRequest("user_id is not an integer")
         if not isinstance(gender, str):
             raise BadRequest("gender is not a string")
         if not isinstance(birthday, str):
@@ -181,8 +183,7 @@ class _PatientInformation(AppResource):
         if not isinstance(country, str):
             raise BadRequest("country is not a string")
 
-        form_id = g.session.user.create_form(
-            FormTypes("patient information"),
+        patient_information_id = g.session.user.create_patient_information(
             user_id=user_id,
             gender=gender,
             birthday=birthday,
@@ -195,7 +196,7 @@ class _PatientInformation(AppResource):
 
         return {
             "_links": {"self": {"href": url_for("_patientinformation")}},
-            "form_id": form_id,
+            "patient_information_id": patient_information_id,
         }
 
 
@@ -211,7 +212,7 @@ class _PatientInformationView(AppResource):
             An url path.
 
         """
-        return "/forms/patientinformation/<int:form_id>"
+        return "/forms/patientinformation/<int:patient_information_id>"
 
     @classmethod
     def get_dependencies(cls):
@@ -231,16 +232,23 @@ class _PatientInformationView(AppResource):
         return set()
 
     @authentication_required
-    def get(self, form_id: int):
+    def get(self, patient_information_id: int):
         return {
-            "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
-            "form": g.session.user.get_serialized_form(
-                form_t=FormTypes("patient information"), form_id=form_id
+            "_links": {
+                "self": {
+                    "href": url_for(
+                        "_patientinformationview",
+                        patient_information_id=patient_information_id,
+                    )
+                }
+            },
+            "patient_information": g.session.user.get_serialized_patient_information(
+                patient_information_id
             ),
         }
 
     @authentication_required
-    def patch(self, form_id: int):
+    def patch(self, patient_information_id: int):
         patch_body = request.get_json()
 
         kwargs = {}
@@ -255,7 +263,7 @@ class _PatientInformationView(AppResource):
             birthday = patch_body["birthday"]
             if not isinstance(birthday, str):
                 raise BadRequest("birthday is not a string")
-            kwargs["birthday"] = datetime.strptime(birthday, "%d/%m/%Y")
+            kwargs["birthday"] = birthday
 
         if "acquaintance_phone" in patch_body:
             acquaintance_phone = patch_body["acquaintance_phone"]
@@ -287,15 +295,18 @@ class _PatientInformationView(AppResource):
                 raise BadRequest("country is not a string")
             kwargs["country"] = country
 
-        g.session.user.update_form(
-            form_t=FormTypes("patient information"), form_id=form_id, **kwargs
-        )
+        g.session.user.update_patient_information(patient_information_id, **kwargs)
 
         return {
             "_links": {
-                "self": {"href": url_for("_patientinformationview", form_id=form_id)}
+                "self": {
+                    "href": url_for(
+                        "_patientinformationview",
+                        patient_information_id=patient_information_id,
+                    )
+                }
             },
-            "form_id": form_id,
+            "patient_information_id": patient_information_id,
         }
 
 
@@ -417,7 +428,7 @@ class _SociodemographicEvaluation(AppResource):
             raise BadRequest("medicines field is not a list")
 
         form_id = g.session.user.create_form(
-            FormTypes("sociodemographic_evaluation"),
+            form_t=FormTypes("sociodemographic_evaluation"),
             patient_information_id=patient_information_id,
             civil_status=civil_status,
             lives_with_status=lives_with_status,
@@ -477,7 +488,7 @@ class _SociodemographicEvaluationView(AppResource):
         return {
             "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
             "form": g.session.user.get_serialized_form(
-                form_t=FormTypes("sociodemographic_evaluation"), form_id=form_id
+                FormTypes("sociodemographic_evaluation"), form_id
             ),
         }
 
@@ -548,7 +559,7 @@ class _SociodemographicEvaluationView(AppResource):
             kwargs["medicines"] = medicines
 
         g.session.user.update_form(
-            form_t=FormTypes("sociodemographic_evaluation"), form_id=form_id, **kwargs
+            FormTypes("sociodemographic_evaluation"), form_id, **kwargs
         )
 
         return {
@@ -601,19 +612,9 @@ class _KineticFunctionalEvaluation(AppResource):
         post_body = request.get_json()
 
         try:
-            user_id = post_body["user_id"]
+            patient_information_id = post_body["patient_information_id"]
         except KeyError:
-            raise BadRequest("user_id field is missing")
-
-        try:
-            medical_record_number = post_body["medical_record_number"]
-        except KeyError:
-            raise BadRequest("medical_record_number field is missing")
-
-        try:
-            evaluation_date = post_body["evaluation_date"]
-        except KeyError:
-            raise BadRequest("evaluation_date field is missing")
+            raise BadRequest("patient_information_id field is missing")
 
         try:
             clinic_diagnostic = post_body["clinic_diagnostic"]
@@ -640,48 +641,79 @@ class _KineticFunctionalEvaluation(AppResource):
         except KeyError:
             raise BadRequest("functional_history field is missing")
 
-        structure_and_function = post_body.get("structure_and_function", None)
+        try:
+            structure_and_function = post_body["structure_and_function"]
+        except KeyError:
+            raise BadRequest("structure_and_function field is missing")
 
-        activity_and_participation = post_body.get("activity_and_participation", None)
+        try:
+            activity_and_participation = post_body["activity_and_participation"]
+        except KeyError:
+            raise BadRequest("activity_and_participation field is missing")
 
-        physical_functional_tests_results = post_body.get(
-            "physical_functional_tests_results", None
-        )
+        try:
+            physical_functional_tests_results = post_body[
+                "physical_functional_tests_results"
+            ]
+        except KeyError:
+            raise BadRequest("physical_functional_tests_results field is missing")
 
-        complementary_exams_results = post_body.get("complementary_exams_results", None)
+        try:
+            complementary_exams_results = post_body["complementary_exams_results"]
+        except KeyError:
+            raise BadRequest("complementary_exams_results field is missing")
 
-        deficiency_diagnosis = post_body.get("deficiency_diagnosis", None)
+        try:
+            deficiency_diagnosis = post_body["deficiency_diagnosis"]
+        except KeyError:
+            raise BadRequest("deficiency_diagnosis field is missing")
 
-        activity_limitation_diagnosis = post_body.get(
-            "activity_limitation_diagnosis", None
-        )
+        try:
+            activity_limitation_diagnosis = post_body["activity_limitation_diagnosis"]
+        except KeyError:
+            raise BadRequest("activity_limitation_diagnosis field is missing")
 
-        participation_restriction_diagnosis = post_body.get(
-            "participation_restriction_diagnosis", None
-        )
+        try:
+            participation_restriction_diagnosis = post_body[
+                "participation_restriction_diagnosis"
+            ]
+        except KeyError:
+            raise BadRequest("participation_restriction_diagnosis field is missing")
 
-        environment_factors_diagnosis = post_body.get(
-            "environment_factors_diagnosis", None
-        )
+        try:
+            environment_factors_diagnosis = post_body["environment_factors_diagnosis"]
+        except KeyError:
+            raise BadRequest("environment_factors_diagnosis field is missing")
 
-        functional_objectives_diagnosis = post_body.get(
-            "functional_objectives_diagnosis", None
-        )
+        try:
+            functional_objectives_diagnosis = post_body[
+                "functional_objectives_diagnosis"
+            ]
+        except KeyError:
+            raise BadRequest("functional_objectives_diagnosis field is missing")
 
-        therapeutic_plan_diagnosis = post_body.get("therapeutic_plan_diagnosis", None)
+        try:
+            therapeutic_plan_diagnosis = post_body["therapeutic_plan_diagnosis"]
+        except KeyError:
+            raise BadRequest("therapeutic_plan_diagnosis field is missing")
 
-        reevaluation_dates = post_body.get("reevaluation_dates", None)
+        try:
+            reevaluation_dates = post_body["reevaluation_dates"]
+        except KeyError:
+            raise BadRequest("reevaluation_dates field is missing")
 
-        academic_assessor = post_body.get("academic_assessor", None)
+        try:
+            academic_assessor = post_body["academic_assessor"]
+        except KeyError:
+            raise BadRequest("academic_assessor field is missing")
 
-        preceptor_assessor = post_body.get("preceptor_assessor", None)
+        try:
+            preceptor_assessor = post_body["preceptor_assessor"]
+        except KeyError:
+            raise BadRequest("preceptor_assessor field is missing")
 
-        if not isinstance(user_id, int):
-            raise BadRequest("user_id field is not an integer")
-        if not isinstance(medical_record_number, int):
-            raise BadRequest("medical_record_number field is not an integer")
-        if not isinstance(evaluation_date, str):
-            raise BadRequest("evaluation_date field is not a string")
+        if not isinstance(patient_information_id, int):
+            raise BadRequest("patient_information_id field is not an integer")
         if not isinstance(clinic_diagnostic, str):
             raise BadRequest("clinic_diagnostic field is not a string")
         if not isinstance(main_complaint, str):
@@ -693,13 +725,13 @@ class _KineticFunctionalEvaluation(AppResource):
         if not isinstance(functional_history, str):
             raise BadRequest("functional_history field is not a string")
         if structure_and_function is not None and not isinstance(
-            structure_and_function, str
+            structure_and_function, list
         ):
-            raise BadRequest("structure_and_function field is not a string")
+            raise BadRequest("structure_and_function field is not a list")
         if activity_and_participation is not None and not isinstance(
-            activity_and_participation, str
+            activity_and_participation, list
         ):
-            raise BadRequest("activity_and_participation field is not a string")
+            raise BadRequest("activity_and_participation field is not a list")
         if physical_functional_tests_results is not None and not isinstance(
             physical_functional_tests_results, str
         ):
@@ -725,27 +757,25 @@ class _KineticFunctionalEvaluation(AppResource):
         if environment_factors_diagnosis is not None and not isinstance(
             environment_factors_diagnosis, str
         ):
-            raise BadRequest("environment_factors_diagnosis field is not an list")
+            raise BadRequest("environment_factors_diagnosis field is not a string")
         if functional_objectives_diagnosis is not None and not isinstance(
             functional_objectives_diagnosis, list
         ):
-            raise BadRequest("functional_objectives_diagnosis field is not an list")
+            raise BadRequest("functional_objectives_diagnosis field is not a list")
         if therapeutic_plan_diagnosis is not None and not isinstance(
             therapeutic_plan_diagnosis, list
         ):
-            raise BadRequest("therapeutic_plan_diagnosis field is not an list")
+            raise BadRequest("therapeutic_plan_diagnosis field is not a list")
         if reevaluation_dates is not None and not isinstance(reevaluation_dates, list):
-            raise BadRequest("reevaluation_dates field is not an list")
+            raise BadRequest("reevaluation_dates field is not a list")
         if academic_assessor is not None and not isinstance(academic_assessor, str):
-            raise BadRequest("academic_assessor field is not an list")
+            raise BadRequest("academic_assessor field is not a string")
         if preceptor_assessor is not None and not isinstance(preceptor_assessor, str):
-            raise BadRequest("preceptor_assessor field is not an list")
+            raise BadRequest("preceptor_assessor field is not a string")
 
         form_id = g.session.user.create_form(
-            FormTypes("kineticfunctional"),
-            user_id=user_id,
-            medical_record_number=medical_record_number,
-            evaluation_date=evaluation_date,
+            form_t=FormTypes("kinetic_functional_evaluation"),
+            patient_information_id=patient_information_id,
             clinic_diagnostic=clinic_diagnostic,
             main_complaint=main_complaint,
             functional_complaint=functional_complaint,
@@ -812,7 +842,7 @@ class _KineticFunctionalEvaluationView(AppResource):
         return {
             "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
             "form": g.session.user.get_serialized_form(
-                form_t=FormTypes("kineticfunctional"), form_id=form_id
+                FormTypes("kinetic_functional_evaluation"), form_id
             ),
         }
 
@@ -821,20 +851,6 @@ class _KineticFunctionalEvaluationView(AppResource):
         patch_body = request.get_json()
 
         kwargs = {}
-
-        if "medical_record_number" in patch_body:
-            medical_record_number = patch_body["medical_record_number"]
-            if not isinstance(medical_record_number, int):
-                raise BadRequest("medical_record_number field is not an integer")
-            kwargs["medical_record_number"] = medical_record_number
-
-        if "evaluation_date" in patch_body:
-            evaluation_date = patch_body["evaluation_date"]
-            if not isinstance(evaluation_date, str):
-                raise BadRequest("evaluation_date field is not a string")
-            kwargs["evaluation_date"] = datetime.strftime(
-                evaluation_date, "%d/%m/%Y"
-            ).isoformat()
 
         if "clinic_diagnostic" in patch_body:
             clinic_diagnostic = patch_body["clinic_diagnostic"]
@@ -868,14 +884,14 @@ class _KineticFunctionalEvaluationView(AppResource):
 
         if "structure_and_function" in patch_body:
             structure_and_function = patch_body["structure_and_function"]
-            if not isinstance(structure_and_function, str):
-                raise BadRequest("structure_and_function field is not a string")
+            if not isinstance(structure_and_function, list):
+                raise BadRequest("structure_and_function field is not a list")
             kwargs["structure_and_function"] = structure_and_function
 
         if "activity_and_participation" in patch_body:
             activity_and_participation = patch_body["activity_and_participation"]
-            if not isinstance(activity_and_participation, str):
-                raise BadRequest("activity_and_participation field is not a string")
+            if not isinstance(activity_and_participation, list):
+                raise BadRequest("activity_and_participation field is not a list")
             kwargs["activity_and_participation"] = activity_and_participation
 
         if "physical_functional_tests_results" in patch_body:
@@ -931,21 +947,19 @@ class _KineticFunctionalEvaluationView(AppResource):
                 "functional_objectives_diagnosis"
             ]
             if not isinstance(functional_objectives_diagnosis, list):
-                raise BadRequest(
-                    "functional_objectives_diagnosis field is not a string"
-                )
+                raise BadRequest("functional_objectives_diagnosis field is not a list")
             kwargs["functional_objectives_diagnosis"] = functional_objectives_diagnosis
 
         if "therapeutic_plan_diagnosis" in patch_body:
             therapeutic_plan_diagnosis = patch_body["therapeutic_plan_diagnosis"]
             if not isinstance(therapeutic_plan_diagnosis, list):
-                raise BadRequest("therapeutic_plan_diagnosis field is not a string")
+                raise BadRequest("therapeutic_plan_diagnosis field is not a list")
             kwargs["therapeutic_plan_diagnosis"] = therapeutic_plan_diagnosis
 
         if "reevaluation_dates" in patch_body:
             reevaluation_dates = patch_body["reevaluation_dates"]
             if not isinstance(reevaluation_dates, list):
-                raise BadRequest("reevaluation_dates field is not a string")
+                raise BadRequest("reevaluation_dates field is not a list")
             kwargs["reevaluation_dates"] = reevaluation_dates
 
         if "academic_assessor" in patch_body:
@@ -960,9 +974,7 @@ class _KineticFunctionalEvaluationView(AppResource):
                 raise BadRequest("preceptor_assessor field is not a string")
             kwargs["preceptor_assessor"] = preceptor_assessor
 
-        g.session.user.update_form(
-            FormTypes("kineticfunctional"), form_id=form_id, **kwargs
-        )
+        g.session.user.update_form(FormTypes("kineticfunctional"), form_id, **kwargs)
 
         return {
             "_links": {
@@ -1041,7 +1053,6 @@ class _GoniometryEvaluation(AppResource):
 
 
 class _GoniometryEvaluationView(AppResource):
-
     @classmethod
     def get_path(cls):
         """Returns the url path of this AppResource.
@@ -1607,6 +1618,8 @@ class _SensoryEvaluationView(AppResource):
         )
 
         return {
-            "_links": {"self": {"href": url_for("_sensoryevaluation", form_id=form_id)}},
+            "_links": {
+                "self": {"href": url_for("_sensoryevaluation", form_id=form_id)}
+            },
             "form_id": form_id,
         }
