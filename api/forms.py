@@ -837,12 +837,6 @@ class _KineticFunctionalEvaluationView(AppResource):
 
         kwargs = {}
 
-        if "user_id" in patch_body:
-            user_id = patch_body["user_id"]
-            if not isinstance(user_id, int):
-                raise BadRequest("user_id field is not an integer")
-            kwargs["user_id"] = user_id
-
         if "medical_record_number" in patch_body:
             medical_record_number = patch_body["medical_record_number"]
             if not isinstance(medical_record_number, int):
@@ -981,7 +975,7 @@ class _KineticFunctionalEvaluationView(AppResource):
                 raise BadRequest("preceptor_assessor field is not a string")
             kwargs["preceptor_assessor"] = preceptor_assessor
 
-        g.session.user.update_form(form_id=form_id, **kwargs)
+        g.session.user.update_form(FormTypes("kineticfunctional"), form_id=form_id, **kwargs)
 
         return {
             "_links": {
@@ -1033,11 +1027,6 @@ class _GoniometryEvaluation(AppResource):
 
         post_body = request.get_json()
 
-        # Assuming the data will be a list in JSON
-        # This list is a list of lists and each list represents a measured articulation [[data1], [data2], ...]
-        # Each measured articulation list contains the name of the measured articulation and
-        # a list of days containing the left and right description {"articulation_name", days: [[day1], [day2], ...]]
-
         try:
             user_id = post_body["user_id"]
         except KeyError:
@@ -1049,10 +1038,10 @@ class _GoniometryEvaluation(AppResource):
             raise BadRequest("data1 field is missing")
 
         if not isinstance(user_id, int):
-            raise BadRequest("user_id field is not a string")
+            raise BadRequest("user_id field is not an integer")
 
         if not isinstance(data, dict):
-            raise BadRequest("user_id field is not a string")
+            raise BadRequest("user_id field is not a dict")
 
         form_id = g.session.user.create_form(
             FormTypes("goniometry evaluation"), user_id=user_id, data=data
@@ -1060,5 +1049,70 @@ class _GoniometryEvaluation(AppResource):
 
         return {
             "_links": {"self": {"href": url_for("_goniometryevaluation")}},
+            "form_id": form_id,
+        }
+
+
+class _GoniometryEvaluationView(AppResource):
+
+    @classmethod
+    def get_path(cls):
+        """Returns the url path of this AppResource.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            An url path.
+
+        """
+        return "/forms/goniometryevaluation/<int:form_id>"
+
+    @classmethod
+    def get_dependencies(cls):
+        """Returns the dependencies of this AppResource.
+
+        Notes:
+            If there's no dependency this must return an empty set.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            A set of module names that contains AppResource
+                classes used by this AppResource.
+
+        """
+        return set()
+
+    @authentication_required
+    def get(self, form_id: int):
+        return {
+            "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
+            "form": g.session.user.get_serialized_form(
+                form_t=FormTypes("goniometry evaluation"), form_id=form_id
+            ),
+        }
+
+    @authentication_required
+    def patch(self, form_id: int):
+        patch_body = request.get_json()
+
+        kwargs = {}
+
+        if "data" in patch_body:
+            data = patch_body["data"]
+            if not isinstance(data, dict):
+                raise BadRequest("data field is not a dict")
+            kwargs["data"] = data
+
+        g.session.user.update_form(FormTypes("goniometry evaluation"), form_id=form_id, **kwargs)
+
+        return {
+            "_links": {
+                "self": {
+                    "href": url_for("_goniometryevaluationview", form_id=form_id)
+                }
+            },
             "form_id": form_id,
         }
