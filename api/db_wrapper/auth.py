@@ -247,7 +247,7 @@ class User:
     def create_form(
         self, form_t: forms_wrapper.FormTypes, user_id: int, **kwargs
     ) -> int:
-        self._check_permissions({f"create_{form_t.value}_form"})
+        self._check_permissions({f"create_form"})
 
         if form_t is forms_wrapper.FormTypes.PatientInformation:
             form = forms_wrapper.PatientInformation()
@@ -269,7 +269,7 @@ class User:
     def get_serialized_form(
         self, form_t: forms_wrapper.FormTypes, form_id: int
     ) -> dict:
-        self._check_permissions({f"read_{form_t.value}_form_data"})
+        self._check_permissions({f"read_form_data"})
 
         if form_t is forms_wrapper.FormTypes.PatientInformation:
             form = forms_wrapper.PatientInformation(form_id)
@@ -284,7 +284,7 @@ class User:
         return form.serialized()
 
     def update_form(self, form_t: forms_wrapper.FormTypes, form_id: int, **kwargs):
-        self._check_permissions({f"change_{form_t.value}_form_data"})
+        self._check_permissions({f"change_form_data"})
 
         if form_t is forms_wrapper.FormTypes.PatientInformation:
             form = forms_wrapper.PatientInformation(form_id)

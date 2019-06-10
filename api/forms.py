@@ -1072,9 +1072,7 @@ class _Goniometry(AppResource):
             raise BadRequest("data field is not a dict")
 
         form_id = g.session.user.create_form(
-            form_t=FormTypes("goniometry"),
-            user_id=user_id,
-            data=data,
+            form_t=FormTypes("goniometry"), user_id=user_id, data=data
         )
 
         return {
@@ -1200,9 +1198,7 @@ class _MuscleStrength(AppResource):
             raise BadRequest("data field is not a dict")
 
         form_id = g.session.user.create_form(
-            form_t=FormTypes("muscle_strength"),
-            user_id=user_id,
-            data=data,
+            form_t=FormTypes("muscle_strength"), user_id=user_id, data=data
         )
 
         return {
@@ -1328,9 +1324,7 @@ class _Ashworth(AppResource):
             raise BadRequest("data field is not a dict")
 
         form_id = g.session.user.create_form(
-            form_t=FormTypes("ashworth"),
-            user_id=user_id,
-            data=data,
+            form_t=FormTypes("ashworth"), user_id=user_id, data=data
         )
 
         return {"_links": {"self": {"href": url_for("_ashworth")}}, "form_id": form_id}
@@ -1451,9 +1445,7 @@ class _PainIntensity(AppResource):
             raise BadRequest("data field is not a dict")
 
         form_id = g.session.user.create_form(
-            form_t=FormTypes("pain_intensity"),
-            user_id=user_id,
-            data=data,
+            form_t=FormTypes("pain_intensity"), user_id=user_id, data=data
         )
 
         return {
@@ -1717,9 +1709,7 @@ class _SensoryEvaluation(AppResource):
             raise BadRequest("data field is not a dict")
 
         form_id = g.session.user.create_form(
-            form_t=FormTypes("sensory_evaluation"),
-            user_id=user_id,
-            data=data,
+            form_t=FormTypes("sensory_evaluation"), user_id=user_id, data=data
         )
 
         return {
