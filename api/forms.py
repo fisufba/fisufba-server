@@ -77,10 +77,7 @@ class FormsIndex(AppResource):
                     "href": url_for("_kineticfunctionalevaluationview", form_id=0),
                     "templated": True,
                 },
-                "forms:goniometry": {
-                    "href": url_for("_goniometry"),
-                    "templated": True,
-                },
+                "forms:goniometry": {"href": url_for("_goniometry"), "templated": True},
                 "forms:goniometryview": {
                     "href": url_for("_goniometryview", form_id=0),
                     "templated": True,
@@ -93,10 +90,7 @@ class FormsIndex(AppResource):
                     "href": url_for("_musclestrengthview", form_id=0),
                     "templated": True,
                 },
-                "forms:ashworth": {
-                    "href": url_for("_ashworth"),
-                    "templated": True,
-                },
+                "forms:ashworth": {"href": url_for("_ashworth"), "templated": True},
                 "forms:ashworthview": {
                     "href": url_for("_ashworthview", form_id=0),
                     "templated": True,
@@ -109,10 +103,7 @@ class FormsIndex(AppResource):
                     "href": url_for("_painintensityview", form_id=0),
                     "templated": True,
                 },
-                "forms:pipe": {
-                    "href": url_for("_pipe"),
-                    "templated": True,
-                },
+                "forms:pipe": {"href": url_for("_pipe"), "templated": True},
                 "forms:pipeview": {
                     "href": url_for("_pipeview", form_id=0),
                     "templated": True,
@@ -125,10 +116,7 @@ class FormsIndex(AppResource):
                     "href": url_for("_sensoryevaluationview", form_id=0),
                     "templated": True,
                 },
-                "forms:tineti": {
-                    "href": url_for("_tineti"),
-                    "templated": True,
-                },
+                "forms:tineti": {"href": url_for("_tineti"), "templated": True},
                 "forms:tinetiview": {
                     "href": url_for("_tinetiview", form_id=0),
                     "templated": True,
@@ -1940,13 +1928,9 @@ class _Tineti(AppResource):
             closed_eyes=closed_eyes,
             rotate_360=rotate_360,
             sit_down=sit_down,
-
         )
 
-        return {
-            "_links": {"self": {"href": url_for("_tineti")}},
-            "form_id": form_id,
-        }
+        return {"_links": {"self": {"href": url_for("_tineti")}}, "form_id": form_id}
 
 
 class _SensoryEvaluationView(AppResource):
@@ -1984,9 +1968,7 @@ class _SensoryEvaluationView(AppResource):
     def get(self, form_id: int):
         return {
             "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
-            "form": g.session.user.get_serialized_form(
-                FormTypes("tineti"), form_id
-            ),
+            "form": g.session.user.get_serialized_form(FormTypes("tineti"), form_id),
         }
 
     @authentication_required
@@ -2052,8 +2034,6 @@ class _SensoryEvaluationView(AppResource):
         g.session.user.update_form(FormTypes("tineti"), form_id, **kwargs)
 
         return {
-            "_links": {
-                "self": {"href": url_for("_tineti", form_id=form_id)}
-            },
+            "_links": {"self": {"href": url_for("_tineti", form_id=form_id)}},
             "form_id": form_id,
         }

@@ -107,9 +107,7 @@ class PatientInformation:
             kwargs["gender"] = forms.PatientInformation.GenderTypes(kwargs["gender"])
 
         if "birthday" in kwargs:
-            kwargs["birthday"] = datetime.datetime.strptime(
-                kwargs["birthday"], "%d/%m/%Y"
-            )
+            kwargs["birthday"] = datetime.date.fromisoformat(kwargs["birthday"])
 
         return kwargs
 
@@ -150,7 +148,7 @@ class PatientInformation:
 
         if "birthday" in kwargs:
             try:
-                _ = datetime.datetime.strptime(kwargs["birthday"], "%d/%m/%Y")
+                _ = datetime.date.fromisoformat(kwargs["birthday"])
             except ValueError:
                 raise BadRequest("birthday date is malformed")
 
@@ -348,13 +346,149 @@ class KineticFunctionalEvaluation(Form):
     _db_model = forms.KineticFunctionalEvaluation
 
     def _convert_kwarg_values(self, **kwargs):
-        pass
+        if "structure_and_function" in kwargs:
+            structure_and_function = forms.KineticFunctionalEvaluation.StructureAndFunctionTypes(
+                0
+            )
+            for string in kwargs["structure_and_function"]:
+                structure_and_function |= forms.KineticFunctionalEvaluation.StructureAndFunctionTypes.from_string(
+                    string
+                )
+            kwargs["structure_and_function"] = structure_and_function
+
+        if "activity_and_participation" in kwargs:
+            activity_and_participation = forms.KineticFunctionalEvaluation.ActivityAndParticipationTypes(
+                0
+            )
+            for string in kwargs["activity_and_participation"]:
+                activity_and_participation |= forms.KineticFunctionalEvaluation.ActivityAndParticipationTypes.from_string(
+                    string
+                )
+            kwargs["activity_and_participation"] = activity_and_participation
+
+        return kwargs
 
     def _serialized(self):
-        pass
+        structure_and_function = list()
+        for enum_item in forms.KineticFunctionalEvaluation.StructureAndFunctionTypes:
+            if self._form.structure_and_function & enum_item:
+                structure_and_function.append(
+                    forms.KineticFunctionalEvaluation.StructureAndFunctionTypes.to_string(
+                        enum_item
+                    )
+                )
+
+        activity_and_participation = list()
+        for (
+            enum_item
+        ) in forms.KineticFunctionalEvaluation.ActivityAndParticipationTypes:
+            if self._form.activity_and_participation & enum_item:
+                activity_and_participation.append(
+                    forms.KineticFunctionalEvaluation.ActivityAndParticipationTypes.to_string(
+                        enum_item
+                    )
+                )
+
+        return dict(
+            id=self._form.id,
+            patient_information_id=self._form.patient_information.id,
+            clinic_diagnostic=self._form.clinic_diagnostic,
+            main_complaint=self._form.main_complaint,
+            functional_complaint=self._form.functional_complaint,
+            clinical_history=self._form.clinical_history,
+            functional_history=self._form.functional_history,
+            structure_and_function=structure_and_function,
+            activity_and_participation=activity_and_participation,
+            physical_functional_tests_results=self._form.physical_functional_tests_results,
+            complementary_exams_results=self._form.complementary_exams_results,
+            deficiency_diagnosis=self._form.deficiency_diagnosis,
+            activity_limitation_diagnosis=self._form.activity_limitation_diagnosis,
+            participation_restriction_diagnosis=self._form.participation_restriction_diagnosis,
+            environment_factors_diagnosis=self._form.environment_factors_diagnosis,
+            functional_objectives_diagnosis=self._form.functional_objectives_diagnosis,
+            therapeutic_plan_diagnosis=self._form.therapeutic_plan_diagnosis,
+            reevaluation_dates=self._form.reevaluation_dates,
+            academic_assessor=self._form.academic_assessor,
+            preceptor_assessor=self._form.preceptor_assessor,
+            updated_at=None
+            if self._form.updated_at is None
+            else self._form.updated_at.isoformat(),
+            created_at=None
+            if self._form.created_at is None
+            else self._form.created_at.isoformat(),
+        )
 
     def _validate_kwargs(self, **kwargs):
-        pass
+        valid_kwargs = {
+            "clinic_diagnostic",
+            "main_complaint",
+            "functional_complaint",
+            "clinical_history",
+            "functional_history",
+            "structure_and_function",
+            "activity_and_participation",
+            "physical_functional_tests_results",
+            "complementary_exams_results",
+            "deficiency_diagnosis",
+            "activity_limitation_diagnosis",
+            "participation_restriction_diagnosis",
+            "environment_factors_diagnosis",
+            "functional_objectives_diagnosis",
+            "therapeutic_plan_diagnosis",
+            "reevaluation_dates",
+            "academic_assessor",
+            "preceptor_assessor",
+        }
+        for kwarg in kwargs.keys():
+            if kwarg not in valid_kwargs:
+                # This is indeed an internal server error.
+                raise TypeError(f"{kwarg} is not a valid keyword argument")
+
+        if "structure_and_function" in kwargs:
+            valid_strings = (
+                forms.KineticFunctionalEvaluation.StructureAndFunctionTypes.valid_string_values()
+            )
+            if not all(
+                string in valid_strings for string in kwargs["structure_and_function"]
+            ):
+                raise BadRequest("invalid structure_and_function value")
+
+        if "activity_and_participation" in kwargs:
+            valid_strings = (
+                forms.KineticFunctionalEvaluation.ActivityAndParticipationTypes.valid_string_values()
+            )
+            if not all(
+                string in valid_strings
+                for string in kwargs["activity_and_participation"]
+            ):
+                raise BadRequest("invalid activity_and_participation value")
+
+        if "functional_objectives_diagnosis" in kwargs:
+            if not all(
+                isinstance(medicine, str)
+                for medicine in kwargs["functional_objectives_diagnosis"]
+            ):
+                raise BadRequest("invalid functional objective value")
+
+        if "therapeutic_plan_diagnosis" in kwargs:
+            if not all(
+                isinstance(medicine, str)
+                for medicine in kwargs["therapeutic_plan_diagnosis"]
+            ):
+                raise BadRequest("invalid therapeutic plan value")
+
+        if "reevaluation_dates" in kwargs:
+            if not all(
+                isinstance(reevaluation_date, str)
+                for reevaluation_date in kwargs["reevaluation_dates"]
+            ):
+                raise BadRequest("invalid reevaluate date value")
+
+            for reevaluation_date in kwargs["reevaluation_dates"]:
+                try:
+                    _ = datetime.date.fromisoformat(reevaluation_date)
+                except ValueError:
+                    raise BadRequest("reevaluate date is malformed")
 
 
 class FormTypes(enum.Enum):
