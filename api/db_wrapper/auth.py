@@ -1,6 +1,6 @@
 import datetime
 import secrets
-from typing import Set
+from typing import Dict, List, Optional, Set, Union
 
 import bcrypt
 import peewee
@@ -64,21 +64,14 @@ class User:
         self.phone = self._user.phone
         self.email = self._user.email
 
-        self._group_names = set(
-            group.name
-            for group in auth.Group.select(auth.Group.name)
-            .join(auth.UserGroups)
-            .switch(auth.Group)
-            .where(auth.UserGroups.user == self._user)
-        )
-
         self._permissions = set(
             permission.codename
             for permission in auth.Permission.select(auth.Permission.codename)
             .join(auth.GroupPermissions)
             .join(auth.Group)
+            .join(auth.UserGroups)
             .switch(auth.Permission)
-            .where(auth.Group.name.in_(self._group_names))
+            .where(auth.UserGroups.user == self._user)
         )
 
     def create_session(self) -> str:
@@ -186,14 +179,7 @@ class User:
             A serialized auth.User from the database.
 
         """
-        user_group_names = set(
-            group.name
-            for group in auth.Group.select(auth.Group.name)
-            .join(auth.UserGroups)
-            .join(auth.User)
-            .switch(auth.Group)
-            .where(auth.User.id == user_id)
-        )
+        user_group_names = self._get_user_group_names(user_id)
 
         required_permissions = set(
             f"read_{group_name}_data" for group_name in user_group_names
@@ -212,6 +198,7 @@ class User:
             phone=user.phone,
             email=user.email,
             groups=list(user_group_names),
+            forms=self._get_serialized_user_form_ids(user),
             last_login=None if user.last_login is None else user.last_login.isoformat(),
             verified_at=None
             if user.verified_at is None
@@ -240,14 +227,7 @@ class User:
 
         update_kwargs = self._convert_kwarg_values(**kwargs)
 
-        user_group_names = set(
-            group.name
-            for group in auth.Group.select(auth.Group.name)
-            .join(auth.UserGroups)
-            .join(auth.User)
-            .switch(auth.Group)
-            .where(auth.User.id == user_id)
-        )
+        user_group_names = self._get_user_group_names(user_id)
 
         required_permissions = set(
             f"change_{group_name}_data" for group_name in user_group_names
@@ -329,6 +309,51 @@ class User:
             ).decode("utf-8")
 
         return kwargs
+
+    def _get_serialized_user_form_ids(
+        self, user: auth.User
+    ) -> Dict[str, Union[int, Optional[List[int]]]]:
+        result = dict()
+
+        try:
+            form_id = forms.PatientInformation.get(user=user).id
+        except forms.PatientInformation.DoesNotExist:
+            form_id = None
+        result[forms_wrapper.FormTypes.PatientInformation.value] = form_id
+
+        try:
+            form_ids = list(
+                form.id
+                for form in forms.SociodemographicEvaluation.select().where(
+                    forms.SociodemographicEvaluation.user == user
+                )
+            )
+        except forms.SociodemographicEvaluation.DoesNotExist:
+            form_ids = None
+        result[forms_wrapper.FormTypes.SociodemographicEvaluation.value] = form_ids
+
+        try:
+            form_ids = list(
+                form.id
+                for form in forms.KineticFunctionalEvaluation.select().where(
+                    forms.KineticFunctionalEvaluation.user == user
+                )
+            )
+        except forms.KineticFunctionalEvaluation.DoesNotExist:
+            form_ids = None
+        result[forms_wrapper.FormTypes.KineticFunctionalEvaluation.value] = form_ids
+
+        return result
+
+    def _get_user_group_names(self, user_id: int) -> Set[str]:
+        return set(
+            group.name
+            for group in auth.Group.select(auth.Group.name)
+            .join(auth.UserGroups)
+            .join(auth.User)
+            .switch(auth.Group)
+            .where(auth.User.id == user_id)
+        )
 
     def _restore(self):
         try:
