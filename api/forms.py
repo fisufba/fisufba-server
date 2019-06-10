@@ -1056,24 +1056,24 @@ class _Goniometry(AppResource):
         post_body = request.get_json()
 
         try:
-            patient_information_id = post_body["patient_information_id"]
+            user_id = post_body["user_id"]
         except KeyError:
-            raise BadRequest("patient_information_id field is missing")
+            raise BadRequest("user_id field is missing")
 
         try:
             data = post_body["data"]
         except KeyError:
             raise BadRequest("data field is missing")
 
-        if not isinstance(patient_information_id, int):
-            raise BadRequest("patient_information_id field is not an integer")
+        if not isinstance(user_id, int):
+            raise BadRequest("user_id field is not an integer")
 
         if not isinstance(data, dict):
             raise BadRequest("data field is not a dict")
 
         form_id = g.session.user.create_form(
             form_t=FormTypes("goniometry"),
-            patient_information_id=patient_information_id,
+            user_id=user_id,
             data=data,
         )
 
@@ -1184,24 +1184,24 @@ class _MuscleStrength(AppResource):
         post_body = request.get_json()
 
         try:
-            patient_information_id = post_body["patient_information_id"]
+            user_id = post_body["user_id"]
         except KeyError:
-            raise BadRequest("patient_information_id field is missing")
+            raise BadRequest("user_id field is missing")
 
         try:
             data = post_body["data"]
         except KeyError:
             raise BadRequest("data field is missing")
 
-        if not isinstance(patient_information_id, int):
-            raise BadRequest("patient_information_id field is not an integer")
+        if not isinstance(user_id, int):
+            raise BadRequest("user_id field is not an integer")
 
         if not isinstance(data, dict):
             raise BadRequest("data field is not a dict")
 
         form_id = g.session.user.create_form(
             form_t=FormTypes("muscle_strength"),
-            patient_information_id=patient_information_id,
+            user_id=user_id,
             data=data,
         )
 
@@ -1312,24 +1312,24 @@ class _Ashworth(AppResource):
         post_body = request.get_json()
 
         try:
-            patient_information_id = post_body["patient_information_id"]
+            user_id = post_body["user_id"]
         except KeyError:
-            raise BadRequest("patient_information_id field is missing")
+            raise BadRequest("user_id field is missing")
 
         try:
             data = post_body["data"]
         except KeyError:
             raise BadRequest("data field is missing")
 
-        if not isinstance(patient_information_id, int):
-            raise BadRequest("patient_information_id field is not an integer")
+        if not isinstance(user_id, int):
+            raise BadRequest("user_id field is not an integer")
 
         if not isinstance(data, dict):
             raise BadRequest("data field is not a dict")
 
         form_id = g.session.user.create_form(
             form_t=FormTypes("ashworth"),
-            patient_information_id=patient_information_id,
+            user_id=user_id,
             data=data,
         )
 
@@ -1435,24 +1435,24 @@ class _PainIntensity(AppResource):
         post_body = request.get_json()
 
         try:
-            patient_information_id = post_body["patient_information_id"]
+            user_id = post_body["user_id"]
         except KeyError:
-            raise BadRequest("patient_information_id field is missing")
+            raise BadRequest("user_id field is missing")
 
         try:
             data = post_body["data"]
         except KeyError:
             raise BadRequest("data field is missing")
 
-        if not isinstance(patient_information_id, int):
-            raise BadRequest("patient_information_id field is not an integer")
+        if not isinstance(user_id, int):
+            raise BadRequest("user_id field is not an integer")
 
         if not isinstance(data, dict):
             raise BadRequest("data field is not a dict")
 
         form_id = g.session.user.create_form(
             form_t=FormTypes("pain_intensity"),
-            patient_information_id=patient_information_id,
+            user_id=user_id,
             data=data,
         )
 
@@ -1563,9 +1563,9 @@ class _PiPe(AppResource):
         post_body = request.get_json()
 
         try:
-            patient_information_id = post_body["patient_information_id"]
+            user_id = post_body["user_id"]
         except KeyError:
-            raise BadRequest("patient_information_id field is missing")
+            raise BadRequest("user_id field is missing")
 
         try:
             respiratory_muscle_strength = post_body["respiratory_muscle_strength"]
@@ -1577,8 +1577,8 @@ class _PiPe(AppResource):
         except KeyError:
             raise BadRequest("predictive_value field is missing")
 
-        if not isinstance(patient_information_id, int):
-            raise BadRequest("patient_information_id field is not an integer")
+        if not isinstance(user_id, int):
+            raise BadRequest("user_id field is not an integer")
 
         if not isinstance(respiratory_muscle_strength, dict):
             raise BadRequest("respiratory_muscle_strength field is not a dict")
@@ -1588,7 +1588,7 @@ class _PiPe(AppResource):
 
         form_id = g.session.user.create_form(
             form_t=FormTypes("pi_pe"),
-            patient_information_id=patient_information_id,
+            user_id=user_id,
             respiratory_muscle_strength=respiratory_muscle_strength,
             predictive_value=predictive_value,
         )
@@ -1701,24 +1701,24 @@ class _SensoryEvaluation(AppResource):
         post_body = request.get_json()
 
         try:
-            patient_information_id = post_body["patient_information_id"]
+            user_id = post_body["user_id"]
         except KeyError:
-            raise BadRequest("patient_information_id field is missing")
+            raise BadRequest("user_id field is missing")
 
         try:
             data = post_body["data"]
         except KeyError:
             raise BadRequest("data field is missing")
 
-        if not isinstance(patient_information_id, int):
-            raise BadRequest("patient_information_id field is not an integer")
+        if not isinstance(user_id, int):
+            raise BadRequest("user_id field is not an integer")
 
         if not isinstance(data, dict):
             raise BadRequest("data field is not a dict")
 
         form_id = g.session.user.create_form(
             form_t=FormTypes("sensory_evaluation"),
-            patient_information_id=patient_information_id,
+            user_id=user_id,
             data=data,
         )
 
@@ -1831,9 +1831,9 @@ class _Tineti(AppResource):
         post_body = request.get_json()
 
         try:
-            patient_information_id = post_body["patient_information_id"]
+            user_id = post_body["user_id"]
         except KeyError:
-            raise BadRequest("patient_information_id field is missing")
+            raise BadRequest("user_id field is missing")
 
         try:
             sitting_balance = post_body["sitting_balance"]
@@ -1880,8 +1880,8 @@ class _Tineti(AppResource):
         except KeyError:
             raise BadRequest("sit_down field is missing")
 
-        if not isinstance(patient_information_id, int):
-            raise BadRequest("patient_information_id field is not an integer")
+        if not isinstance(user_id, int):
+            raise BadRequest("user_id field is not an integer")
 
         if not isinstance(sitting_balance, list):
             raise BadRequest("sitting_balance field is not a list")
@@ -1912,7 +1912,7 @@ class _Tineti(AppResource):
 
         form_id = g.session.user.create_form(
             form_t=FormTypes("tc6"),
-            patient_information_id=patient_information_id,
+            user_id=user_id,
             sitting_balance=sitting_balance,
             get_up_from_the_chair=get_up_from_the_chair,
             attempts_to_get_up=attempts_to_get_up,
@@ -2074,9 +2074,9 @@ class _TC6(AppResource):
         post_body = request.get_json()
 
         try:
-            patient_information_id = post_body["patient_information_id"]
+            user_id = post_body["user_id"]
         except KeyError:
-            raise BadRequest("patient_information_id field is missing")
+            raise BadRequest("user_id field is missing")
 
         try:
             evaluation = post_body["evaluation"]
@@ -2088,8 +2088,8 @@ class _TC6(AppResource):
         except KeyError:
             raise BadRequest("revaluation field is missing")
 
-        if not isinstance(patient_information_id, int):
-            raise BadRequest("patient_information_id field is not an integer")
+        if not isinstance(user_id, int):
+            raise BadRequest("user_id field is not an integer")
 
         if not isinstance(evaluation, dict):
             raise BadRequest("evaluation field is not a dict")
@@ -2099,7 +2099,7 @@ class _TC6(AppResource):
 
         form_id = g.session.user.create_form(
             form_t=FormTypes("tc6"),
-            patient_information_id=patient_information_id,
+            user_id=user_id,
             evaluation=evaluation,
             revaluation=revaluation,
         )
@@ -2212,9 +2212,9 @@ class _TC6(AppResource):
         post_body = request.get_json()
 
         try:
-            patient_information_id = post_body["patient_information_id"]
+            user_id = post_body["user_id"]
         except KeyError:
-            raise BadRequest("patient_information_id field is missing")
+            raise BadRequest("user_id field is missing")
 
         try:
             evaluation = post_body["evaluation"]
@@ -2226,8 +2226,8 @@ class _TC6(AppResource):
         except KeyError:
             raise BadRequest("revaluation field is missing")
 
-        if not isinstance(patient_information_id, int):
-            raise BadRequest("patient_information_id field is not an integer")
+        if not isinstance(user_id, int):
+            raise BadRequest("user_id field is not an integer")
 
         if not isinstance(evaluation, dict):
             raise BadRequest("evaluation field is not a dict")
@@ -2237,7 +2237,7 @@ class _TC6(AppResource):
 
         form_id = g.session.user.create_form(
             form_t=FormTypes("tc6"),
-            patient_information_id=patient_information_id,
+            user_id=user_id,
             evaluation=evaluation,
             revaluation=revaluation,
         )
