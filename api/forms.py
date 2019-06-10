@@ -77,12 +77,52 @@ class FormsIndex(AppResource):
                     "href": url_for("_kineticfunctionalevaluationview", form_id=0),
                     "templated": True,
                 },
-                "forms:goniometryevaluation": {
-                    "href": url_for("_goniometryevaluation"),
+                "forms:goniometry": {
+                    "href": url_for("_goniometry"),
                     "templated": True,
                 },
-                "forms:goniometryevaluationview": {
-                    "href": url_for("_goniometryevaluationview", form_id=0),
+                "forms:goniometryview": {
+                    "href": url_for("_goniometryview", form_id=0),
+                    "templated": True,
+                },
+                "forms:musclestrength": {
+                    "href": url_for("_musclestrength"),
+                    "templated": True,
+                },
+                "forms:musclestrengthview": {
+                    "href": url_for("_musclestrengthview", form_id=0),
+                    "templated": True,
+                },
+                "forms:ashworth": {
+                    "href": url_for("_ashworth"),
+                    "templated": True,
+                },
+                "forms:ashworthview": {
+                    "href": url_for("_ashworthview", form_id=0),
+                    "templated": True,
+                },
+                "forms:painintensity": {
+                    "href": url_for("_painintensity"),
+                    "templated": True,
+                },
+                "forms:painintensityview": {
+                    "href": url_for("_painintensityview", form_id=0),
+                    "templated": True,
+                },
+                "forms:pipe": {
+                    "href": url_for("_pipe"),
+                    "templated": True,
+                },
+                "forms:pipeview": {
+                    "href": url_for("_pipeview", form_id=0),
+                    "templated": True,
+                },
+                "forms:sensoryevaluation": {
+                    "href": url_for("_sensoryevaluation"),
+                    "templated": True,
+                },
+                "forms:sensoryevaluationview": {
+                    "href": url_for("_sensoryevaluationview", form_id=0),
                     "templated": True,
                 },
             }
