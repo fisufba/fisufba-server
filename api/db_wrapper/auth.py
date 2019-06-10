@@ -264,38 +264,14 @@ class User:
         if user_id == self.id:
             self._restore()
 
-    def create_patient_information(self, user_id: int, **kwargs) -> int:
-        self._check_permissions({"create_patient_information"})
-
-        patient_information = forms_wrapper.PatientInformation()
-
-        try:
-            user = auth.User.get_by_id(user_id)
-        except auth.User.DoesNotExist:
-            raise NotFound("User not found")
-
-        return patient_information.create(user=user, **kwargs)
-
-    def get_serialized_patient_information(self, patient_information_id: int) -> dict:
-        self._check_permissions({"read_patient_information_data"})
-
-        patient_information = forms_wrapper.PatientInformation(patient_information_id)
-
-        return patient_information.serialized()
-
-    def update_patient_information(self, patient_information_id: int, **kwargs):
-        self._check_permissions({"change_patient_information_data"})
-
-        patient_information = forms_wrapper.PatientInformation(patient_information_id)
-
-        patient_information.update(**kwargs)
-
     def create_form(
-        self, form_t: forms_wrapper.FormTypes, patient_information_id: int, **kwargs
+        self, form_t: forms_wrapper.FormTypes, user_id: int, **kwargs
     ) -> int:
         self._check_permissions({f"create_{form_t.value}_form"})
 
-        if form_t is forms_wrapper.FormTypes.SociodemographicEvaluation:
+        if form_t is forms_wrapper.FormTypes.PatientInformation:
+            form = forms_wrapper.PatientInformation()
+        elif form_t is forms_wrapper.FormTypes.SociodemographicEvaluation:
             form = forms_wrapper.SociodemographicEvaluation()
         elif form_t is forms_wrapper.FormTypes.KineticFunctionalEvaluation:
             form = forms_wrapper.KineticFunctionalEvaluation()
@@ -304,20 +280,20 @@ class User:
             raise NotImplementedError("Unexpected form type")
 
         try:
-            patient_information = forms.PatientInformation.get_by_id(
-                patient_information_id
-            )
-        except forms.PatientInformation.DoesNotExist:
+            user = auth.User.get_by_id(user_id)
+        except auth.User.DoesNotExist:
             raise NotFound("User not found")
 
-        return form.create(patient_information=patient_information, **kwargs)
+        return form.create(user=user, **kwargs)
 
     def get_serialized_form(
         self, form_t: forms_wrapper.FormTypes, form_id: int
     ) -> dict:
         self._check_permissions({f"read_{form_t.value}_form_data"})
 
-        if form_t is forms_wrapper.FormTypes.SociodemographicEvaluation:
+        if form_t is forms_wrapper.FormTypes.PatientInformation:
+            form = forms_wrapper.PatientInformation(form_id)
+        elif form_t is forms_wrapper.FormTypes.SociodemographicEvaluation:
             form = forms_wrapper.SociodemographicEvaluation(form_id)
         elif form_t is forms_wrapper.FormTypes.KineticFunctionalEvaluation:
             form = forms_wrapper.KineticFunctionalEvaluation(form_id)
@@ -330,7 +306,9 @@ class User:
     def update_form(self, form_t: forms_wrapper.FormTypes, form_id: int, **kwargs):
         self._check_permissions({f"change_{form_t.value}_form_data"})
 
-        if form_t is forms_wrapper.FormTypes.SociodemographicEvaluation:
+        if form_t is forms_wrapper.FormTypes.PatientInformation:
+            form = forms_wrapper.PatientInformation(form_id)
+        elif form_t is forms_wrapper.FormTypes.SociodemographicEvaluation:
             form = forms_wrapper.SociodemographicEvaluation(form_id)
         elif form_t is forms_wrapper.FormTypes.KineticFunctionalEvaluation:
             form = forms_wrapper.KineticFunctionalEvaluation(form_id)

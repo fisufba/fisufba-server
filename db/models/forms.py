@@ -11,7 +11,11 @@ from db.models.base import _BaseModel
 from utils.fields import EnumField, JSONField
 
 
-class PatientInformation(_BaseModel):
+class Form(_BaseModel):
+    user = ForeignKeyField(User)
+
+
+class PatientInformation(Form):
     class Meta:
         table_name = "forms_patient_information"
 
@@ -30,10 +34,6 @@ class PatientInformation(_BaseModel):
     neighborhood = CharField()
     city = CharField()
     country = CharField()
-
-
-class Form(_BaseModel):
-    patient_information = ForeignKeyField(PatientInformation)
 
 
 class SociodemographicEvaluation(Form):
