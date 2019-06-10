@@ -56,9 +56,7 @@ class FormsIndex(AppResource):
                     "templated": True,
                 },
                 "forms:patientinformationview": {
-                    "href": url_for(
-                        "_patientinformationview", patient_information_id=0
-                    ),
+                    "href": url_for("_patientinformationview", form_id=0),
                     "templated": True,
                 },
                 "forms:sociodemographicevaluation": {
@@ -218,7 +216,8 @@ class _PatientInformation(AppResource):
         if not isinstance(country, str):
             raise BadRequest("country is not a string")
 
-        patient_information_id = g.session.user.create_patient_information(
+        form_id = g.session.user.create_form(
+            form_t=FormTypes("patient_information"),
             user_id=user_id,
             gender=gender,
             birthday=birthday,
@@ -231,7 +230,7 @@ class _PatientInformation(AppResource):
 
         return {
             "_links": {"self": {"href": url_for("_patientinformation")}},
-            "patient_information_id": patient_information_id,
+            "form_id": form_id,
         }
 
 
@@ -247,7 +246,7 @@ class _PatientInformationView(AppResource):
             An url path.
 
         """
-        return "/forms/patientinformation/<int:patient_information_id>"
+        return "/forms/patientinformation/<int:form_id>"
 
     @classmethod
     def get_dependencies(cls):
@@ -267,23 +266,18 @@ class _PatientInformationView(AppResource):
         return set()
 
     @authentication_required
-    def get(self, patient_information_id: int):
+    def get(self, form_id: int):
         return {
             "_links": {
-                "self": {
-                    "href": url_for(
-                        "_patientinformationview",
-                        patient_information_id=patient_information_id,
-                    )
-                }
+                "self": {"href": url_for("_patientinformationview", form_id=form_id)}
             },
-            "patient_information": g.session.user.get_serialized_patient_information(
-                patient_information_id
+            "form": g.session.user.get_serialized_form(
+                FormTypes("patient_information"), form_id
             ),
         }
 
     @authentication_required
-    def patch(self, patient_information_id: int):
+    def patch(self, form_id: int):
         patch_body = request.get_json()
 
         kwargs = {}
@@ -330,18 +324,13 @@ class _PatientInformationView(AppResource):
                 raise BadRequest("country is not a string")
             kwargs["country"] = country
 
-        g.session.user.update_patient_information(patient_information_id, **kwargs)
+        g.session.user.update_form(FormTypes("patient_information"), form_id, **kwargs)
 
         return {
             "_links": {
-                "self": {
-                    "href": url_for(
-                        "_patientinformationview",
-                        patient_information_id=patient_information_id,
-                    )
-                }
+                "self": {"href": url_for("_patientinformationview", form_id=form_id)}
             },
-            "patient_information_id": patient_information_id,
+            "form_id": form_id,
         }
 
 
@@ -385,9 +374,9 @@ class _SociodemographicEvaluation(AppResource):
         post_body = request.get_json()
 
         try:
-            patient_information_id = post_body["patient_information_id"]
+            user_id = post_body["user_id"]
         except KeyError:
-            raise BadRequest("patient_information_id field is missing")
+            raise BadRequest("user_id field is missing")
 
         try:
             civil_status = post_body["civil_status"]
@@ -439,8 +428,8 @@ class _SociodemographicEvaluation(AppResource):
         except KeyError:
             raise BadRequest("medicines field is missing")
 
-        if not isinstance(patient_information_id, int):
-            raise BadRequest("patient_information_id is not an integer")
+        if not isinstance(user_id, int):
+            raise BadRequest("user_id is not an integer")
         if not isinstance(civil_status, str):
             raise BadRequest("civil_status is not a string")
         if not isinstance(lives_with_status, str):
@@ -464,7 +453,7 @@ class _SociodemographicEvaluation(AppResource):
 
         form_id = g.session.user.create_form(
             form_t=FormTypes("sociodemographic_evaluation"),
-            patient_information_id=patient_information_id,
+            user_id=user_id,
             civil_status=civil_status,
             lives_with_status=lives_with_status,
             education=education,
@@ -647,9 +636,9 @@ class _KineticFunctionalEvaluation(AppResource):
         post_body = request.get_json()
 
         try:
-            patient_information_id = post_body["patient_information_id"]
+            user_id = post_body["user_id"]
         except KeyError:
-            raise BadRequest("patient_information_id field is missing")
+            raise BadRequest("user_id field is missing")
 
         try:
             clinic_diagnostic = post_body["clinic_diagnostic"]
@@ -747,8 +736,8 @@ class _KineticFunctionalEvaluation(AppResource):
         except KeyError:
             raise BadRequest("preceptor_assessor field is missing")
 
-        if not isinstance(patient_information_id, int):
-            raise BadRequest("patient_information_id field is not an integer")
+        if not isinstance(user_id, int):
+            raise BadRequest("user_id field is not an integer")
         if not isinstance(clinic_diagnostic, str):
             raise BadRequest("clinic_diagnostic field is not a string")
         if not isinstance(main_complaint, str):
@@ -810,7 +799,7 @@ class _KineticFunctionalEvaluation(AppResource):
 
         form_id = g.session.user.create_form(
             form_t=FormTypes("kinetic_functional_evaluation"),
-            patient_information_id=patient_information_id,
+            user_id=user_id,
             clinic_diagnostic=clinic_diagnostic,
             main_complaint=main_complaint,
             functional_complaint=functional_complaint,
