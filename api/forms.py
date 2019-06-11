@@ -1254,7 +1254,9 @@ class _MuscleStrengthView(AppResource):
     @authentication_required
     def get(self, form_id: int):
         return {
-            "_links": {"self": {"href": url_for("_musclestrengthview", form_id=form_id)}},
+            "_links": {
+                "self": {"href": url_for("_musclestrengthview", form_id=form_id)}
+            },
             "form": g.session.user.get_serialized_form(
                 FormTypes("muscle_strength"), form_id
             ),
@@ -1275,7 +1277,9 @@ class _MuscleStrengthView(AppResource):
         g.session.user.update_form(FormTypes("muscle_strength"), form_id, **kwargs)
 
         return {
-            "_links": {"self": {"href": url_for("_musclestrengthview", form_id=form_id)}},
+            "_links": {
+                "self": {"href": url_for("_musclestrengthview", form_id=form_id)}
+            },
             "form_id": form_id,
         }
 
@@ -1501,7 +1505,9 @@ class _PainIntensityView(AppResource):
     @authentication_required
     def get(self, form_id: int):
         return {
-            "_links": {"self": {"href": url_for("_painintensityview", form_id=form_id)}},
+            "_links": {
+                "self": {"href": url_for("_painintensityview", form_id=form_id)}
+            },
             "form": g.session.user.get_serialized_form(
                 FormTypes("pain_intensity"), form_id
             ),
@@ -1522,7 +1528,9 @@ class _PainIntensityView(AppResource):
         g.session.user.update_form(FormTypes("pain_intensity"), form_id, **kwargs)
 
         return {
-            "_links": {"self": {"href": url_for("_painintensityview", form_id=form_id)}},
+            "_links": {
+                "self": {"href": url_for("_painintensityview", form_id=form_id)}
+            },
             "form_id": form_id,
         }
 
@@ -1765,7 +1773,9 @@ class _SensoryEvaluationView(AppResource):
     @authentication_required
     def get(self, form_id: int):
         return {
-            "_links": {"self": {"href": url_for("_sensoryevaluationview", form_id=form_id)}},
+            "_links": {
+                "self": {"href": url_for("_sensoryevaluationview", form_id=form_id)}
+            },
             "form": g.session.user.get_serialized_form(
                 FormTypes("sensory_evaluation"), form_id
             ),
