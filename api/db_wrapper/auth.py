@@ -264,6 +264,9 @@ class User:
         except auth.User.DoesNotExist:
             raise NotFound("User not found")
 
+        if "patient" not in self._get_user_group_names(user.id):
+            raise BadRequest("Target user is not patient")
+
         return form.create(user=user, **kwargs)
 
     def get_serialized_form(
