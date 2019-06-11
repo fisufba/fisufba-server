@@ -520,7 +520,11 @@ class _SociodemographicEvaluationView(AppResource):
     @authentication_required
     def get(self, form_id: int):
         return {
-            "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
+            "_links": {
+                "self": {
+                    "href": url_for("_sociodemographicevaluationview", form_id=form_id)
+                }
+            },
             "form": g.session.user.get_serialized_form(
                 FormTypes("sociodemographic_evaluation"), form_id
             ),
@@ -874,7 +878,11 @@ class _KineticFunctionalEvaluationView(AppResource):
     @authentication_required
     def get(self, form_id: int):
         return {
-            "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
+            "_links": {
+                "self": {
+                    "href": url_for("_kineticfunctionalevaluationview", form_id=form_id)
+                }
+            },
             "form": g.session.user.get_serialized_form(
                 FormTypes("kinetic_functional_evaluation"), form_id
             ),
@@ -2231,10 +2239,7 @@ class _Quiz(AppResource):
             raise BadRequest("data field is not a list")
 
         form_id = g.session.user.create_form(
-            form_t=FormTypes(form_type),
-            user_id=user_id,
-            form_type=form_type,
-            data=data,
+            form_t=FormTypes(form_type), user_id=user_id, form_type=form_type, data=data
         )
 
         return {"_links": {"self": {"href": url_for("_quiz")}}, "form_id": form_id}
