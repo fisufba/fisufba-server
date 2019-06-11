@@ -19,7 +19,7 @@ class User(_BaseModel):
     password = FixedCharField(max_length=60)
 
     display_name = CharField(max_length=100)
-    phone = CharField(max_length=50, unique=True, default=None, null=True)
+    phone = CharField(max_length=50, default=None, null=True)
     email = CharField(max_length=50, unique=True, default=None, null=True)
 
     last_login = DateTimeField(default=None, null=True)
