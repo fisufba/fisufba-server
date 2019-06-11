@@ -1128,7 +1128,7 @@ class _GoniometryView(AppResource):
     @authentication_required
     def get(self, form_id: int):
         return {
-            "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_goniometryview", form_id=form_id)}},
             "form": g.session.user.get_serialized_form(
                 FormTypes("goniometry"), form_id
             ),
@@ -1149,7 +1149,7 @@ class _GoniometryView(AppResource):
         g.session.user.update_form(FormTypes("goniometry"), form_id, **kwargs)
 
         return {
-            "_links": {"self": {"href": url_for("_goniometry", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_goniometryview", form_id=form_id)}},
             "form_id": form_id,
         }
 
@@ -1254,7 +1254,7 @@ class _MuscleStrengthView(AppResource):
     @authentication_required
     def get(self, form_id: int):
         return {
-            "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_musclestrengthview", form_id=form_id)}},
             "form": g.session.user.get_serialized_form(
                 FormTypes("muscle_strength"), form_id
             ),
@@ -1275,7 +1275,7 @@ class _MuscleStrengthView(AppResource):
         g.session.user.update_form(FormTypes("muscle_strength"), form_id, **kwargs)
 
         return {
-            "_links": {"self": {"href": url_for("_musclestrength", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_musclestrengthview", form_id=form_id)}},
             "form_id": form_id,
         }
 
@@ -1377,7 +1377,7 @@ class _AshworthView(AppResource):
     @authentication_required
     def get(self, form_id: int):
         return {
-            "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_ashworthview", form_id=form_id)}},
             "form": g.session.user.get_serialized_form(FormTypes("ashworth"), form_id),
         }
 
@@ -1396,7 +1396,7 @@ class _AshworthView(AppResource):
         g.session.user.update_form(FormTypes("ashworth"), form_id, **kwargs)
 
         return {
-            "_links": {"self": {"href": url_for("_ashworth", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_ashworthview", form_id=form_id)}},
             "form_id": form_id,
         }
 
@@ -1501,7 +1501,7 @@ class _PainIntensityView(AppResource):
     @authentication_required
     def get(self, form_id: int):
         return {
-            "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_painintensityview", form_id=form_id)}},
             "form": g.session.user.get_serialized_form(
                 FormTypes("pain_intensity"), form_id
             ),
@@ -1522,7 +1522,7 @@ class _PainIntensityView(AppResource):
         g.session.user.update_form(FormTypes("pain_intensity"), form_id, **kwargs)
 
         return {
-            "_links": {"self": {"href": url_for("_painintensity", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_painintensityview", form_id=form_id)}},
             "form_id": form_id,
         }
 
@@ -1635,7 +1635,7 @@ class _PiPeView(AppResource):
     @authentication_required
     def get(self, form_id: int):
         return {
-            "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_pipeview", form_id=form_id)}},
             "form": g.session.user.get_serialized_form(FormTypes("pipe"), form_id),
         }
 
@@ -1660,7 +1660,7 @@ class _PiPeView(AppResource):
         g.session.user.update_form(FormTypes("pipe"), form_id, **kwargs)
 
         return {
-            "_links": {"self": {"href": url_for("_pipe", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_pipeview", form_id=form_id)}},
             "form_id": form_id,
         }
 
@@ -1765,7 +1765,7 @@ class _SensoryEvaluationView(AppResource):
     @authentication_required
     def get(self, form_id: int):
         return {
-            "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_sensoryevaluationview", form_id=form_id)}},
             "form": g.session.user.get_serialized_form(
                 FormTypes("sensory_evaluation"), form_id
             ),
@@ -1787,7 +1787,7 @@ class _SensoryEvaluationView(AppResource):
 
         return {
             "_links": {
-                "self": {"href": url_for("_sensoryevaluation", form_id=form_id)}
+                "self": {"href": url_for("_sensoryevaluationview", form_id=form_id)}
             },
             "form_id": form_id,
         }
@@ -1964,7 +1964,7 @@ class _TinetiView(AppResource):
     @authentication_required
     def get(self, form_id: int):
         return {
-            "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_tinetiview", form_id=form_id)}},
             "form": g.session.user.get_serialized_form(FormTypes("tineti"), form_id),
         }
 
@@ -2031,7 +2031,7 @@ class _TinetiView(AppResource):
         g.session.user.update_form(FormTypes("tineti"), form_id, **kwargs)
 
         return {
-            "_links": {"self": {"href": url_for("_tineti", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_tinetiview", form_id=form_id)}},
             "form_id": form_id,
         }
 
@@ -2144,7 +2144,7 @@ class _TC6View(AppResource):
     @authentication_required
     def get(self, form_id: int):
         return {
-            "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_tc6view", form_id=form_id)}},
             "form": g.session.user.get_serialized_form(FormTypes("tc6"), form_id),
         }
 
@@ -2169,7 +2169,7 @@ class _TC6View(AppResource):
         g.session.user.update_form(FormTypes("tc6"), form_id, **kwargs)
 
         return {
-            "_links": {"self": {"href": url_for("_tc6", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_tc6view", form_id=form_id)}},
             "form_id": form_id,
         }
 
@@ -2283,6 +2283,8 @@ class _QuizView(AppResource):
 
         kwargs = {}
 
+        form_type = str()
+
         if "form_type" in get_body:
             form_type = get_body["form_type"]
             if not isinstance(form_type, str):
@@ -2290,7 +2292,7 @@ class _QuizView(AppResource):
             kwargs["form_type"] = form_type
 
         return {
-            "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_quizview", form_id=form_id)}},
             "form": g.session.user.get_serialized_form(FormTypes(form_type), form_id),
         }
 
@@ -2299,6 +2301,8 @@ class _QuizView(AppResource):
         patch_body = request.get_json()
 
         kwargs = {}
+
+        form_type = str()
 
         if "form_type" in patch_body:
             form_type = patch_body["form_type"]
@@ -2315,6 +2319,6 @@ class _QuizView(AppResource):
         g.session.user.update_form(FormTypes(form_type), form_id, **kwargs)
 
         return {
-            "_links": {"self": {"href": url_for("_quiz", form_id=form_id)}},
+            "_links": {"self": {"href": url_for("_quizview", form_id=form_id)}},
             "form_id": form_id,
         }
