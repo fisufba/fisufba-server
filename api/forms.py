@@ -124,6 +124,11 @@ class FormsIndex(AppResource):
                     "href": url_for("_tc6view", form_id=0),
                     "templated": True,
                 },
+                "forms:quiz": {"href": url_for("_quiz"), "templated": True},
+                "forms:quizview": {
+                    "href": url_for("_quizview", form_id=0),
+                    "templated": True,
+                },
             }
         }
 
@@ -1018,7 +1023,7 @@ class _KineticFunctionalEvaluationView(AppResource):
 class _Goniometry(AppResource):
     """AppResource responsible for GoniometryEvaluation form creation.
 
-        """
+    """
 
     @classmethod
     def get_path(cls):
@@ -1144,7 +1149,7 @@ class _GoniometryView(AppResource):
 class _MuscleStrength(AppResource):
     """AppResource responsible for MuscleStrength form creation.
 
-        """
+    """
 
     @classmethod
     def get_path(cls):
@@ -1270,7 +1275,7 @@ class _MuscleStrengthView(AppResource):
 class _Ashworth(AppResource):
     """AppResource responsible for Ashworth form creation.
 
-        """
+    """
 
     @classmethod
     def get_path(cls):
@@ -1391,7 +1396,7 @@ class _AshworthView(AppResource):
 class _PainIntensity(AppResource):
     """AppResource responsible for PainIntensity form creation.
 
-        """
+    """
 
     @classmethod
     def get_path(cls):
@@ -1517,7 +1522,7 @@ class _PainIntensityView(AppResource):
 class _PiPe(AppResource):
     """AppResource responsible for SensoryEvaluation form creation.
 
-        """
+    """
 
     @classmethod
     def get_path(cls):
@@ -1655,7 +1660,7 @@ class _PiPeView(AppResource):
 class _SensoryEvaluation(AppResource):
     """AppResource responsible for SensoryEvaluation form creation.
 
-        """
+    """
 
     @classmethod
     def get_path(cls):
@@ -1783,7 +1788,7 @@ class _SensoryEvaluationView(AppResource):
 class _Tineti(AppResource):
     """AppResource responsible for Tineti form creation.
 
-        """
+    """
 
     @classmethod
     def get_path(cls):
@@ -2026,7 +2031,7 @@ class _TinetiView(AppResource):
 class _TC6(AppResource):
     """AppResource responsible for TC6 form creation.
 
-        """
+    """
 
     @classmethod
     def get_path(cls):
@@ -2157,5 +2162,154 @@ class _TC6View(AppResource):
 
         return {
             "_links": {"self": {"href": url_for("_tc6", form_id=form_id)}},
+            "form_id": form_id,
+        }
+
+
+class _Quiz(AppResource):
+    """AppResource responsible for Quiz form creation.
+
+    """
+
+    @classmethod
+    def get_path(cls):
+        """Returns the url path of this AppResource.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            An url path.
+
+        """
+        return "/forms/quiz"
+
+    @classmethod
+    def get_dependencies(cls):
+        """Returns the dependencies of this AppResource.
+
+        Notes:
+            If there's no dependency this must return an empty set.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            A set of module names that contains AppResource
+                classes used by this AppResource.
+
+        """
+        return set()
+
+    @authentication_required
+    def post(self):
+
+        post_body = request.get_json()
+
+        try:
+            user_id = post_body["user_id"]
+        except KeyError:
+            raise BadRequest("user_id field is missing")
+
+        try:
+            form_type = post_body["form_type"]
+        except KeyError:
+            raise BadRequest("form_type field is missing")
+
+        try:
+            data = post_body["data"]
+        except KeyError:
+            raise BadRequest("data field is missing")
+
+        if not isinstance(user_id, int):
+            raise BadRequest("user_id field is not an integer")
+
+        if not isinstance(form_type, str):
+            raise BadRequest("form_type field is not a string")
+
+        if not isinstance(data, list):
+            raise BadRequest("data field is not a list")
+
+        form_id = g.session.user.create_form(
+            form_t=FormTypes(form_type),
+            user_id=user_id,
+            form_type=form_type,
+            data=data,
+        )
+
+        return {"_links": {"self": {"href": url_for("_quiz")}}, "form_id": form_id}
+
+
+class _QuizView(AppResource):
+    @classmethod
+    def get_path(cls):
+        """Returns the url path of this AppResource.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            An url path.
+
+        """
+        return "/forms/quiz/<int:form_id>"
+
+    @classmethod
+    def get_dependencies(cls):
+        """Returns the dependencies of this AppResource.
+
+        Notes:
+            If there's no dependency this must return an empty se-t.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            A set of module names that contains AppResource
+                classes used by this AppResource.
+
+        """
+        return set()
+
+    @authentication_required
+    def get(self, form_id: int):
+
+        get_body = request.get_json()
+
+        kwargs = {}
+
+        if "form_type" in get_body:
+            form_type = get_body["form_type"]
+            if not isinstance(form_type, str):
+                raise BadRequest("form_type is not a string")
+            kwargs["form_type"] = form_type
+
+        return {
+            "_links": {"self": {"href": url_for("_forms", form_id=form_id)}},
+            "form": g.session.user.get_serialized_form(FormTypes(form_type), form_id),
+        }
+
+    @authentication_required
+    def patch(self, form_id: int):
+        patch_body = request.get_json()
+
+        kwargs = {}
+
+        if "form_type" in patch_body:
+            form_type = patch_body["form_type"]
+            if not isinstance(form_type, str):
+                raise BadRequest("form_type is not a string")
+            kwargs["form_type"] = form_type
+
+        if "data" in patch_body:
+            data = patch_body["data"]
+            if not isinstance(data, list):
+                raise BadRequest("data field is not a list")
+            kwargs["data"] = data
+
+        g.session.user.update_form(FormTypes(form_type), form_id, **kwargs)
+
+        return {
+            "_links": {"self": {"href": url_for("_quiz", form_id=form_id)}},
             "form_id": form_id,
         }
