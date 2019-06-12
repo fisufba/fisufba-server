@@ -238,10 +238,14 @@ class SociodemographicEvaluation(Form):
                 raise BadRequest("invalid occupational_status")
 
         if "diseases" in kwargs and kwargs["diseases"] is not None:
+            if len(kwargs["diseases"]) == 0:
+                raise BadRequest("empty diseases list")
             if not all(isinstance(disease, str) for disease in kwargs["diseases"]):
                 raise BadRequest("invalid disease value")
 
         if "medicines" in kwargs and kwargs["medicines"] is not None:
+            if len(kwargs["medicines"]) == 0:
+                raise BadRequest("empty medicines list")
             if not all(isinstance(medicine, str) for medicine in kwargs["medicines"]):
                 raise BadRequest("invalid medicine value")
 
@@ -252,18 +256,20 @@ class KineticFunctionalEvaluation(Form):
     def _convert_kwarg_values(self, **kwargs):
         if "structure_and_function" in kwargs:
             structure_and_function = self._db_model.StructureAndFunctionTypes(0)
-            for string in kwargs["structure_and_function"]:
-                structure_and_function |= self._db_model.StructureAndFunctionTypes.from_string(
-                    string
-                )
+            if kwargs["structure_and_function"] is not None:
+                for string in kwargs["structure_and_function"]:
+                    structure_and_function |= self._db_model.StructureAndFunctionTypes.from_string(
+                        string
+                    )
             kwargs["structure_and_function"] = structure_and_function
 
         if "activity_and_participation" in kwargs:
             activity_and_participation = self._db_model.ActivityAndParticipationTypes(0)
-            for string in kwargs["activity_and_participation"]:
-                activity_and_participation |= self._db_model.ActivityAndParticipationTypes.from_string(
-                    string
-                )
+            if kwargs["activity_and_participation"] is not None:
+                for string in kwargs["activity_and_participation"]:
+                    activity_and_participation |= self._db_model.ActivityAndParticipationTypes.from_string(
+                        string
+                    )
             kwargs["activity_and_participation"] = activity_and_participation
 
         return kwargs
@@ -275,6 +281,8 @@ class KineticFunctionalEvaluation(Form):
                 structure_and_function.append(
                     self._db_model.StructureAndFunctionTypes.to_string(enum_item)
                 )
+        if len(structure_and_function) == 0:
+            structure_and_function = None
 
         activity_and_participation = list()
         for enum_item in self._db_model.ActivityAndParticipationTypes:
@@ -282,6 +290,8 @@ class KineticFunctionalEvaluation(Form):
                 activity_and_participation.append(
                     self._db_model.ActivityAndParticipationTypes.to_string(enum_item)
                 )
+        if len(activity_and_participation) == 0:
+            activity_and_participation = None
 
         return dict(
             id=self._form.id,
@@ -338,7 +348,13 @@ class KineticFunctionalEvaluation(Form):
                 # This is indeed an internal server error.
                 raise TypeError(f"{kwarg} is not a valid keyword argument")
 
-        if "structure_and_function" in kwargs:
+        if (
+            "structure_and_function" in kwargs
+            and kwargs["structure_and_function"] is not None
+        ):
+            if len(kwargs["structure_and_function"]) == 0:
+                raise BadRequest("empty structure_and_function list")
+
             valid_strings = (
                 self._db_model.StructureAndFunctionTypes.valid_string_values()
             )
@@ -347,7 +363,13 @@ class KineticFunctionalEvaluation(Form):
             ):
                 raise BadRequest("invalid structure_and_function value")
 
-        if "activity_and_participation" in kwargs:
+        if (
+            "activity_and_participation" in kwargs
+            and kwargs["activity_and_participation"] is not None
+        ):
+            if len(kwargs["activity_and_participation"]) == 0:
+                raise BadRequest("empty activity_and_participation list")
+
             valid_strings = (
                 self._db_model.ActivityAndParticipationTypes.valid_string_values()
             )
@@ -357,21 +379,36 @@ class KineticFunctionalEvaluation(Form):
             ):
                 raise BadRequest("invalid activity_and_participation value")
 
-        if "functional_objectives_diagnosis" in kwargs:
+        if (
+            "functional_objectives_diagnosis" in kwargs
+            and kwargs["functional_objectives_diagnosis"] is not None
+        ):
+            if len(kwargs["functional_objectives_diagnosis"]) == 0:
+                raise BadRequest("empty functional_objectives_diagnosis list")
+
             if not all(
-                isinstance(medicine, str)
-                for medicine in kwargs["functional_objectives_diagnosis"]
+                isinstance(functional_objective, str)
+                for functional_objective in kwargs["functional_objectives_diagnosis"]
             ):
                 raise BadRequest("invalid functional objective value")
 
-        if "therapeutic_plan_diagnosis" in kwargs:
+        if (
+            "therapeutic_plan_diagnosis" in kwargs
+            and kwargs["therapeutic_plan_diagnosis"] is not None
+        ):
+            if len(kwargs["therapeutic_plan_diagnosis"]) == 0:
+                raise BadRequest("empty therapeutic_plan_diagnosis list")
+
             if not all(
-                isinstance(medicine, str)
-                for medicine in kwargs["therapeutic_plan_diagnosis"]
+                isinstance(therapeutic_plan, str)
+                for therapeutic_plan in kwargs["therapeutic_plan_diagnosis"]
             ):
                 raise BadRequest("invalid therapeutic plan value")
 
-        if "reevaluation_dates" in kwargs:
+        if "reevaluation_dates" in kwargs and kwargs["reevaluation_dates"] is not None:
+            if len(kwargs["reevaluation_dates"]) == 0:
+                raise BadRequest("empty reevaluation_dates list")
+
             if not all(
                 isinstance(reevaluation_date, str)
                 for reevaluation_date in kwargs["reevaluation_dates"]

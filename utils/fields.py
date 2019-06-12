@@ -22,8 +22,8 @@ class EnumField(CharField):
         return value.value
 
     def python_value(self, value: Any) -> Any:
-        cast = type(list(self.choices)[0])
-        assert all(isinstance(choice, cast) for choice in list(self.choices))
+        cast = type(list(self.choices)[0].value)
+        assert all(isinstance(choice.value, cast) for choice in list(self.choices))
         return self.choices(cast(value))
 
 

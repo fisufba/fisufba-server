@@ -758,65 +758,63 @@ class _KineticFunctionalEvaluation(AppResource):
             raise BadRequest("preceptor_assessor field is missing")
 
         if not isinstance(user_id, int):
-            raise BadRequest("user_id field is not an integer")
+            raise BadRequest("user_id is not an integer")
         if not isinstance(clinic_diagnostic, str):
-            raise BadRequest("clinic_diagnostic field is not a string")
+            raise BadRequest("clinic_diagnostic is not a string")
         if not isinstance(main_complaint, str):
-            raise BadRequest("main_complaint field is not a string")
+            raise BadRequest("main_complaint is not a string")
         if not isinstance(functional_complaint, str):
-            raise BadRequest("functional_complaint field is not a string")
+            raise BadRequest("functional_complaint is not a string")
         if not isinstance(clinical_history, str):
-            raise BadRequest("clinical_history field is not a string")
+            raise BadRequest("clinical_history is not a string")
         if not isinstance(functional_history, str):
-            raise BadRequest("functional_history field is not a string")
+            raise BadRequest("functional_history is not a string")
         if structure_and_function is not None and not isinstance(
             structure_and_function, list
         ):
-            raise BadRequest("structure_and_function field is not a list")
+            raise BadRequest("structure_and_function is not a list")
         if activity_and_participation is not None and not isinstance(
             activity_and_participation, list
         ):
-            raise BadRequest("activity_and_participation field is not a list")
+            raise BadRequest("activity_and_participation is not a list")
         if physical_functional_tests_results is not None and not isinstance(
             physical_functional_tests_results, str
         ):
-            raise BadRequest("physical_functional_tests_results field is not a string")
+            raise BadRequest("physical_functional_tests_results is not a string")
         if complementary_exams_results is not None and not isinstance(
             complementary_exams_results, str
         ):
-            raise BadRequest("complementary_exams_results field is not a string")
+            raise BadRequest("complementary_exams_results is not a string")
         if deficiency_diagnosis is not None and not isinstance(
             deficiency_diagnosis, str
         ):
-            raise BadRequest("deficiency_diagnosis field is not a string")
+            raise BadRequest("deficiency_diagnosis is not a string")
         if activity_limitation_diagnosis is not None and not isinstance(
             activity_limitation_diagnosis, str
         ):
-            raise BadRequest("activity_limitation_diagnosis field is not a string")
+            raise BadRequest("activity_limitation_diagnosis is not a string")
         if participation_restriction_diagnosis is not None and not isinstance(
             participation_restriction_diagnosis, str
         ):
-            raise BadRequest(
-                "participation_restriction_diagnosis field is not a string"
-            )
+            raise BadRequest("participation_restriction_diagnosis is not a string")
         if environment_factors_diagnosis is not None and not isinstance(
             environment_factors_diagnosis, str
         ):
-            raise BadRequest("environment_factors_diagnosis field is not a string")
+            raise BadRequest("environment_factors_diagnosis is not a string")
         if functional_objectives_diagnosis is not None and not isinstance(
             functional_objectives_diagnosis, list
         ):
-            raise BadRequest("functional_objectives_diagnosis field is not a list")
+            raise BadRequest("functional_objectives_diagnosis is not a list")
         if therapeutic_plan_diagnosis is not None and not isinstance(
             therapeutic_plan_diagnosis, list
         ):
-            raise BadRequest("therapeutic_plan_diagnosis field is not a list")
+            raise BadRequest("therapeutic_plan_diagnosis is not a list")
         if reevaluation_dates is not None and not isinstance(reevaluation_dates, list):
-            raise BadRequest("reevaluation_dates field is not a list")
+            raise BadRequest("reevaluation_dates is not a list")
         if academic_assessor is not None and not isinstance(academic_assessor, str):
-            raise BadRequest("academic_assessor field is not a string")
+            raise BadRequest("academic_assessor is not a string")
         if preceptor_assessor is not None and not isinstance(preceptor_assessor, str):
-            raise BadRequest("preceptor_assessor field is not a string")
+            raise BadRequest("preceptor_assessor is not a string")
 
         form_id = g.session.user.create_form(
             form_t=FormTypes("kinetic_functional_evaluation"),
@@ -904,123 +902,143 @@ class _KineticFunctionalEvaluationView(AppResource):
         if "clinic_diagnostic" in patch_body:
             clinic_diagnostic = patch_body["clinic_diagnostic"]
             if not isinstance(clinic_diagnostic, str):
-                raise BadRequest("clinic_diagnostic field is not a string")
+                raise BadRequest("clinic_diagnostic is not a string")
             kwargs["clinic_diagnostic"] = clinic_diagnostic
 
         if "main_complaint" in patch_body:
             main_complaint = patch_body["main_complaint"]
             if not isinstance(main_complaint, str):
-                raise BadRequest("main_complaint field is not a string")
+                raise BadRequest("main_complaint is not a string")
             kwargs["main_complaint"] = main_complaint
 
         if "functional_complaint" in patch_body:
             functional_complaint = patch_body["functional_complaint"]
             if not isinstance(functional_complaint, str):
-                raise BadRequest("functional_complaint field is not a string")
+                raise BadRequest("functional_complaint is not a string")
             kwargs["functional_complaint"] = functional_complaint
 
         if "clinical_history" in patch_body:
             clinical_history = patch_body["clinical_history"]
             if not isinstance(clinical_history, str):
-                raise BadRequest("clinical_history field is not a string")
+                raise BadRequest("clinical_history is not a string")
             kwargs["clinical_history"] = clinical_history
 
         if "functional_history" in patch_body:
             functional_history = patch_body["functional_history"]
             if not isinstance(functional_history, str):
-                raise BadRequest("functional_history field is not a string")
+                raise BadRequest("functional_history is not a string")
             kwargs["functional_history"] = functional_history
 
         if "structure_and_function" in patch_body:
             structure_and_function = patch_body["structure_and_function"]
-            if not isinstance(structure_and_function, list):
-                raise BadRequest("structure_and_function field is not a list")
+            if structure_and_function is not None and not isinstance(
+                structure_and_function, list
+            ):
+                raise BadRequest("structure_and_function is not a list")
             kwargs["structure_and_function"] = structure_and_function
 
         if "activity_and_participation" in patch_body:
             activity_and_participation = patch_body["activity_and_participation"]
-            if not isinstance(activity_and_participation, list):
-                raise BadRequest("activity_and_participation field is not a list")
+            if activity_and_participation is not None and not isinstance(
+                activity_and_participation, list
+            ):
+                raise BadRequest("activity_and_participation is not a list")
             kwargs["activity_and_participation"] = activity_and_participation
 
         if "physical_functional_tests_results" in patch_body:
             physical_functional_tests_results = patch_body[
                 "physical_functional_tests_results"
             ]
-            if not isinstance(physical_functional_tests_results, str):
-                raise BadRequest(
-                    "physical_functional_tests_results field is not a string"
-                )
+            if physical_functional_tests_results is not None and not isinstance(
+                physical_functional_tests_results, str
+            ):
+                raise BadRequest("physical_functional_tests_results is not a string")
             kwargs[
                 "physical_functional_tests_results"
             ] = physical_functional_tests_results
 
         if "complementary_exams_results" in patch_body:
             complementary_exams_results = patch_body["complementary_exams_results"]
-            if not isinstance(complementary_exams_results, str):
-                raise BadRequest("complementary_exams_results field is not a string")
+            if complementary_exams_results is not None and not isinstance(
+                complementary_exams_results, str
+            ):
+                raise BadRequest("complementary_exams_results is not a string")
             kwargs["complementary_exams_results"] = complementary_exams_results
 
         if "deficiency_diagnosis" in patch_body:
             deficiency_diagnosis = patch_body["deficiency_diagnosis"]
-            if not isinstance(deficiency_diagnosis, str):
-                raise BadRequest("deficiency_diagnosis field is not a string")
+            if deficiency_diagnosis is not None and not isinstance(
+                deficiency_diagnosis, str
+            ):
+                raise BadRequest("deficiency_diagnosis is not a string")
             kwargs["deficiency_diagnosis"] = deficiency_diagnosis
 
         if "activity_limitation_diagnosis" in patch_body:
             activity_limitation_diagnosis = patch_body["activity_limitation_diagnosis"]
-            if not isinstance(activity_limitation_diagnosis, str):
-                raise BadRequest("activity_limitation_diagnosis field is not a string")
+            if activity_limitation_diagnosis is not None and not isinstance(
+                activity_limitation_diagnosis, str
+            ):
+                raise BadRequest("activity_limitation_diagnosis is not a string")
             kwargs["activity_limitation_diagnosis"] = activity_limitation_diagnosis
 
         if "participation_restriction_diagnosis" in patch_body:
             participation_restriction_diagnosis = patch_body[
                 "participation_restriction_diagnosis"
             ]
-            if not isinstance(participation_restriction_diagnosis, str):
-                raise BadRequest(
-                    "participation_restriction_diagnosis field is not a string"
-                )
+            if participation_restriction_diagnosis is not None and not isinstance(
+                participation_restriction_diagnosis, str
+            ):
+                raise BadRequest("participation_restriction_diagnosis is not a string")
             kwargs[
                 "participation_restriction_diagnosis"
             ] = participation_restriction_diagnosis
 
         if "environment_factors_diagnosis" in patch_body:
             environment_factors_diagnosis = patch_body["environment_factors_diagnosis"]
-            if not isinstance(environment_factors_diagnosis, str):
-                raise BadRequest("environment_factors_diagnosis field is not a string")
+            if environment_factors_diagnosis is not None and not isinstance(
+                environment_factors_diagnosis, str
+            ):
+                raise BadRequest("environment_factors_diagnosis is not a string")
             kwargs["environment_factors_diagnosis"] = environment_factors_diagnosis
 
         if "functional_objectives_diagnosis" in patch_body:
             functional_objectives_diagnosis = patch_body[
                 "functional_objectives_diagnosis"
             ]
-            if not isinstance(functional_objectives_diagnosis, list):
-                raise BadRequest("functional_objectives_diagnosis field is not a list")
+            if functional_objectives_diagnosis is not None and not isinstance(
+                functional_objectives_diagnosis, list
+            ):
+                raise BadRequest("functional_objectives_diagnosis is not a list")
             kwargs["functional_objectives_diagnosis"] = functional_objectives_diagnosis
 
         if "therapeutic_plan_diagnosis" in patch_body:
             therapeutic_plan_diagnosis = patch_body["therapeutic_plan_diagnosis"]
-            if not isinstance(therapeutic_plan_diagnosis, list):
-                raise BadRequest("therapeutic_plan_diagnosis field is not a list")
+            if therapeutic_plan_diagnosis is not None and not isinstance(
+                therapeutic_plan_diagnosis, list
+            ):
+                raise BadRequest("therapeutic_plan_diagnosis is not a list")
             kwargs["therapeutic_plan_diagnosis"] = therapeutic_plan_diagnosis
 
         if "reevaluation_dates" in patch_body:
             reevaluation_dates = patch_body["reevaluation_dates"]
-            if not isinstance(reevaluation_dates, list):
-                raise BadRequest("reevaluation_dates field is not a list")
+            if reevaluation_dates is not None and not isinstance(
+                reevaluation_dates, list
+            ):
+                raise BadRequest("reevaluation_dates is not a list")
             kwargs["reevaluation_dates"] = reevaluation_dates
 
         if "academic_assessor" in patch_body:
             academic_assessor = patch_body["academic_assessor"]
-            if not isinstance(academic_assessor, str):
-                raise BadRequest("academic_assessor field is not a string")
+            if academic_assessor is not None and not isinstance(academic_assessor, str):
+                raise BadRequest("academic_assessor is not a string")
             kwargs["academic_assessor"] = academic_assessor
 
         if "preceptor_assessor" in patch_body:
             preceptor_assessor = patch_body["preceptor_assessor"]
-            if not isinstance(preceptor_assessor, str):
-                raise BadRequest("preceptor_assessor field is not a string")
+            if preceptor_assessor is not None and not isinstance(
+                preceptor_assessor, str
+            ):
+                raise BadRequest("preceptor_assessor is not a string")
             kwargs["preceptor_assessor"] = preceptor_assessor
 
         g.session.user.update_form(FormTypes("kineticfunctional"), form_id, **kwargs)
