@@ -331,6 +331,8 @@ class User:
                     forms.SociodemographicEvaluation.user == user
                 )
             )
+            if len(form_ids) == 0:
+                form_ids = None
         except forms.SociodemographicEvaluation.DoesNotExist:
             form_ids = None
         result[forms_wrapper.FormTypes.SociodemographicEvaluation.value] = form_ids
@@ -342,6 +344,8 @@ class User:
                     forms.KineticFunctionalEvaluation.user == user
                 )
             )
+            if len(form_ids) == 0:
+                form_ids = None
         except forms.KineticFunctionalEvaluation.DoesNotExist:
             form_ids = None
         result[forms_wrapper.FormTypes.KineticFunctionalEvaluation.value] = form_ids
