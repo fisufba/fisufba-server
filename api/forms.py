@@ -134,6 +134,10 @@ class FormsIndex(AppResource):
 
 
 class _PatientInformation(AppResource):
+    """AppResource responsible for PatientInformation form creation.
+
+    """
+
     @classmethod
     def get_path(cls):
         """Returns the url path of this AppResource.
@@ -166,7 +170,6 @@ class _PatientInformation(AppResource):
 
     @authentication_required
     def post(self):
-
         post_body = request.get_json()
 
         try:
@@ -245,6 +248,10 @@ class _PatientInformation(AppResource):
 
 
 class _PatientInformationView(AppResource):
+    """AppResource responsible for read and update PatientInformation form information.
+
+    """
+
     @classmethod
     def get_path(cls):
         """Returns the url path of this AppResource.
