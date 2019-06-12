@@ -1041,7 +1041,9 @@ class _KineticFunctionalEvaluationView(AppResource):
                 raise BadRequest("preceptor_assessor is not a string")
             kwargs["preceptor_assessor"] = preceptor_assessor
 
-        g.session.user.update_form(FormTypes("kineticfunctional"), form_id, **kwargs)
+        g.session.user.update_form(
+            FormTypes("kinetic_functional_evaluation"), form_id, **kwargs
+        )
 
         return {
             "_links": {
