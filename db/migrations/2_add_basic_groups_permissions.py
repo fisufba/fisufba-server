@@ -43,16 +43,16 @@ def do_migration():
 
     #: attendant.
     GroupPermissions.create(group=attendant_group, permission=create_patient)
-    GroupPermissions.create(group=attendant_group, permission=change_patient_data)
-    GroupPermissions.create(group=attendant_group, permission=read_patient_data)
     GroupPermissions.create(group=attendant_group, permission=create_form)
+    GroupPermissions.create(group=attendant_group, permission=change_patient_data)
     GroupPermissions.create(group=attendant_group, permission=change_form_data)
+    GroupPermissions.create(group=attendant_group, permission=read_patient_data)
     GroupPermissions.create(group=attendant_group, permission=read_form_data)
 
     #: physiotherapist.
-    GroupPermissions.create(group=physiotherapist_group, permission=read_patient_data)
     GroupPermissions.create(group=physiotherapist_group, permission=create_form)
     GroupPermissions.create(group=physiotherapist_group, permission=change_form_data)
+    GroupPermissions.create(group=physiotherapist_group, permission=read_patient_data)
     GroupPermissions.create(group=physiotherapist_group, permission=read_form_data)
 
 
