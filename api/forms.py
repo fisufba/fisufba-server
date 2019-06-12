@@ -464,9 +464,9 @@ class _SociodemographicEvaluation(AppResource):
         if diseases is not None and not isinstance(diseases, list):
             raise BadRequest("diseases is not a list")
         if not isinstance(is_medicated, bool):
-            raise BadRequest("is_medicated field is not a boolean")
+            raise BadRequest("is_medicated is not a boolean")
         if medicines is not None and not isinstance(medicines, list):
-            raise BadRequest("medicines field is not a list")
+            raise BadRequest("medicines is not a list")
 
         form_id = g.session.user.create_form(
             form_t=FormTypes("sociodemographic_evaluation"),
@@ -587,7 +587,7 @@ class _SociodemographicEvaluationView(AppResource):
 
         if "diseases" in patch_body:
             diseases = patch_body["diseases"]
-            if not isinstance(diseases, list):
+            if diseases is not None and not isinstance(diseases, list):
                 raise BadRequest("diseases is not a list")
             kwargs["diseases"] = diseases
 
