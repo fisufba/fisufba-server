@@ -42,17 +42,17 @@ class User:
             assert password is not None
 
             if not utils.is_valid_cpf(cpf):
-                raise BadRequest("Invalid cpf")
+                raise BadRequest("invalid cpf")
 
             try:
                 _user = auth.User.get(cpf=cpf)
             except auth.User.DoesNotExist:
-                raise Forbidden("User does not exist")
+                raise Forbidden("user does not exist")
 
             if not bcrypt.checkpw(
                 password.encode("utf-8"), _user.password.encode("utf-8")
             ):
-                raise Forbidden("Password is wrong")
+                raise Forbidden("wrong password")
         else:
             assert cpf is None
             assert password is None
@@ -100,7 +100,7 @@ class User:
                 auth.Session.token == session_token
             )
             # This is indeed an internal server error.
-            raise Exception("Login Failed")
+            raise Exception("login Failed")
 
         return session_token
 
@@ -148,7 +148,7 @@ class User:
 
         user_groups = auth.Group.select().where(auth.Group.name.in_(user_group_names))
         if len(user_groups) != len(user_group_names):
-            raise BadRequest("Invalid group_names")
+            raise BadRequest("invalid user_group_names")
 
         required_permissions = set(
             f"create_{group_name}" for group_name in user_group_names
@@ -158,14 +158,14 @@ class User:
         try:
             user = auth.User.create(**creation_kwargs)
         except peewee.IntegrityError:
-            raise Conflict("User already exists")
+            raise Conflict("user already exists")
 
         try:
             for group in user_groups:
                 auth.UserGroups.create(user=user, group=group)
         except peewee.IntegrityError:
             auth.User.delete().where(auth.User.id == user.id)
-            raise Conflict("Duplicated user_group relation")
+            raise Conflict("duplicated user_group relation")
 
         return user.id
 
@@ -189,7 +189,7 @@ class User:
         try:
             user = auth.User.get_by_id(user_id)
         except auth.User.DoesNotExist:
-            raise NotFound("User not found")
+            raise NotFound("user not found")
 
         return dict(
             id=user.id,
@@ -239,7 +239,7 @@ class User:
         ).where(auth.User.id == user_id)
         if query.execute() == 0:
             # Is this an internal server error?
-            raise Exception("Not updated")
+            raise Exception("not updated")
 
         if user_id == self.id:
             self._restore()
@@ -257,15 +257,15 @@ class User:
             form = forms_wrapper.KineticFunctionalEvaluation()
         else:
             # This is indeed an internal server error.
-            raise NotImplementedError("Unexpected form type")
+            raise NotImplementedError("unexpected form type")
 
         try:
             user = auth.User.get_by_id(user_id)
         except auth.User.DoesNotExist:
-            raise NotFound("User not found")
+            raise NotFound("user not found")
 
         if "patient" not in self._get_user_group_names(user.id):
-            raise BadRequest("Target user is not patient")
+            raise BadRequest("target user is not a patient")
 
         return form.create(user=user, **kwargs)
 
@@ -282,7 +282,7 @@ class User:
             form = forms_wrapper.KineticFunctionalEvaluation(form_id)
         else:
             # This is indeed an internal server error.
-            raise NotImplementedError("Unexpected form type")
+            raise NotImplementedError("unexpected form type")
 
         return form.serialized()
 
@@ -297,13 +297,13 @@ class User:
             form = forms_wrapper.KineticFunctionalEvaluation(form_id)
         else:
             # This is indeed an internal server error.
-            raise NotImplementedError("Unexpected form type")
+            raise NotImplementedError("unexpected form type")
 
         form.update(**kwargs)
 
     def _check_permissions(self, required_permissions: Set[str]):
         if len(required_permissions.difference(self._permissions)) > 0:
-            raise Forbidden("Not enough permission")
+            raise Forbidden("not enough permission")
 
     def _convert_kwarg_values(self, **kwargs):
         if "password" in kwargs:
@@ -363,7 +363,7 @@ class User:
             self._user = auth.User.get_by_id(self.id)
         except auth.User.DoesNotExist:
             # This is indeed an internal server error.
-            raise Exception("User does not exist")
+            raise Exception("user does not exist")
 
         self.cpf = self._user.cpf
         self.display_name = self._user.display_name
@@ -411,11 +411,11 @@ class Session:
         try:
             self._session = auth.Session.get(token=token)
         except auth.Session.DoesNotExist:
-            raise Forbidden("Invalid session token")
+            raise Forbidden("invalid session token")
 
         if self._session.expire_date <= datetime.datetime.utcnow():
             #: Trying to authenticate an expired session.
-            raise Forbidden("Expired token")
+            raise Forbidden("expired token")
 
         self.token = self._session.token
         self.user = User(_user=self._session.user)
@@ -434,4 +434,4 @@ class Session:
             auth.Session.id == self._session.id
         )
         if query.execute() == 0:
-            raise Forbidden("Invalid session")
+            raise Forbidden("invalid session")
