@@ -140,7 +140,7 @@ class PatientInformation(Form):
             try:
                 _ = datetime.date.fromisoformat(kwargs["birthday"])
             except ValueError:
-                raise BadRequest("birthday date is malformed")
+                raise BadRequest("malformed birthday date")
 
 
 class SociodemographicEvaluation(Form):
@@ -237,11 +237,11 @@ class SociodemographicEvaluation(Form):
             if kwargs["occupational_status"] not in occupational_status_types:
                 raise BadRequest("invalid occupational_status")
 
-        if "diseases" in kwargs:
+        if "diseases" in kwargs and kwargs["diseases"] is not None:
             if not all(isinstance(disease, str) for disease in kwargs["diseases"]):
                 raise BadRequest("invalid disease value")
 
-        if "medicines" in kwargs:
+        if "medicines" in kwargs and kwargs["medicines"] is not None:
             if not all(isinstance(medicine, str) for medicine in kwargs["medicines"]):
                 raise BadRequest("invalid medicine value")
 
