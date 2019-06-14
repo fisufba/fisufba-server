@@ -442,7 +442,15 @@ class _Search(AppResource):
 
         return {
             "_links": {"self": {"href": url_for("_search")}},
-            "_embedded": {"items": [{"type": "user", "_embedded": g.session.user.get_serialized_user(user.id)} for user in query]}
+            "_embedded": {
+                "items": [
+                    {
+                        "type": "user",
+                        "_embedded": g.session.user.get_serialized_user(user.id),
+                    }
+                    for user in query
+                ]
+            },
         }
 
 
