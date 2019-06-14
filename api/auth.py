@@ -405,6 +405,7 @@ class _Search(AppResource):
         return set()
 
     @classmethod
+    @authentication_required
     def get(self):
 
         kwargs = {}
