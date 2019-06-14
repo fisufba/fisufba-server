@@ -4,6 +4,7 @@ from werkzeug.exceptions import BadRequest, Forbidden
 from api.abc import AppResource
 from api.abc import authentication_required, unauthentication_required
 from api.db_wrapper.auth import User, Session
+from api.search import search_user
 
 
 class _Signup(AppResource):
@@ -371,6 +372,76 @@ class _Account(AppResource):
         return {
             "_links": {"self": {"href": url_for("_account", user_id=user_id)}},
             "user_id": user_id,
+        }
+
+
+class _Search(AppResource):
+    """AppResource responsible for search an user.
+
+    """
+
+    @classmethod
+    def get_path(cls):
+        """Returns the url path of this AppResource.
+
+        Returns:
+            An url path.
+
+        """
+        return "/accounts/search"
+
+    @classmethod
+    def get_dependencies(cls):
+        """Returns the dependencies of this AppResource.
+
+        Notes:
+            If there's no dependency this must return an empty set.
+
+        Returns:
+            A set of module names that contains AppResource
+                classes used by this AppResource.
+
+        """
+        return set()
+
+    @classmethod
+    def get(self):
+
+        kwargs = {}
+
+        cpf = request.args.get("cpf", None)
+
+        display_name = request.args.get("display_name", None)
+
+        phone = request.args.get("phone", None)
+
+        email = request.args.get("email", None)
+
+        if cpf is not None:
+            if not isinstance(cpf, str):
+                raise BadRequest("cpf is not a string")
+            kwargs["cpf"] = cpf
+
+        if display_name is not None:
+            if not isinstance(display_name, str):
+                raise BadRequest("display_name is not a string")
+            kwargs["display_name"] = display_name
+
+        if phone is not None:
+            if not isinstance(phone, str):
+                raise BadRequest("phone is not a string")
+            kwargs["phone"] = phone
+
+        if email is not None:
+            if not isinstance(email, str):
+                raise BadRequest("email is not a string")
+            kwargs["email"] = email
+
+        query = search_user(**kwargs)
+
+        # TODO references
+        return {
+            "users": [g.session.user.get_serialized_user(user.id) for user in query]
         }
 
 
