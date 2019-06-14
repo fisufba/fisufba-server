@@ -1,7 +1,7 @@
 from db.models.forms import User
 
 
-def search_user(**kwargs):
+def search_user(**kwargs) -> dict:
 
     # cpf and phone number are searched by their prefixes
     # display_name and email are searched by their substrings

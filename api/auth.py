@@ -404,36 +404,33 @@ class _Search(AppResource):
         """
         return set()
 
-    @classmethod
     @authentication_required
     def get(self):
 
+        get_body = request.args
+
         kwargs = {}
 
-        cpf = request.args.get("cpf", None)
-
-        display_name = request.args.get("display_name", None)
-
-        phone = request.args.get("phone", None)
-
-        email = request.args.get("email", None)
-
-        if cpf is not None:
+        if "cpf" in get_body:
+            cpf = get_body["cpf"]
             if not isinstance(cpf, str):
                 raise BadRequest("cpf is not a string")
             kwargs["cpf"] = cpf
 
-        if display_name is not None:
+        if "display_name" in get_body:
+            display_name = get_body["display_name"]
             if not isinstance(display_name, str):
                 raise BadRequest("display_name is not a string")
             kwargs["display_name"] = display_name
 
-        if phone is not None:
+        if "phone" in get_body:
+            phone = get_body["phone"]
             if not isinstance(phone, str):
                 raise BadRequest("phone is not a string")
             kwargs["phone"] = phone
 
-        if email is not None:
+        if "email" in get_body:
+            email = get_body["email"]
             if not isinstance(email, str):
                 raise BadRequest("email is not a string")
             kwargs["email"] = email
