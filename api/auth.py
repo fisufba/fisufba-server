@@ -439,9 +439,9 @@ class _Search(AppResource):
 
         query = search_user(**kwargs)
 
-        # TODO references
         return {
-            "users": [g.session.user.get_serialized_user(user.id) for user in query]
+            "_links": {"self": {"href": url_for("_search")}},
+            "_embedded": {"items": [{"type": "user", "_embedded": g.session.user.get_serialized_user(user.id)} for user in query]}
         }
 
 
