@@ -3,6 +3,7 @@ from werkzeug.exceptions import BadRequest
 
 from api.abc import AppResource
 from api.abc import authentication_required
+from api.db_wrapper import ACTIVITYANDPARTICIPATIONFORMTYPEVALUES
 from api.db_wrapper import FormTypes
 from api.db_wrapper import STRUCTUVEANDFUNCTIONFORMTYPEVALUES
 
@@ -86,14 +87,12 @@ class FormsIndex(AppResource):
                     ),
                     "templated": True,
                 },
-                "forms:tineti": {"href": url_for("_tineti"), "templated": True},
-                "forms:tinetiview": {
-                    "href": url_for("_tinetiview", form_id=0),
+                "forms:six_m_walk_test": {
+                    "href": url_for("_sixmwalktest"),
                     "templated": True,
                 },
-                "forms:tc6": {"href": url_for("_tc6"), "templated": True},
-                "forms:tc6view": {
-                    "href": url_for("_tc6view", form_id=0),
+                "forms:six_m_walk_test_view": {
+                    "href": url_for("_sixmwalktestview", form_id=0),
                     "templated": True,
                 },
                 "forms:quiz": {"href": url_for("_quiz"), "templated": True},
@@ -1268,7 +1267,7 @@ class _SixMWalkTestView(AppResource):
             An url path.
 
         """
-        return "/forms//activityandparticipation/six_m_walk_test/<int:form_id>"
+        return "/forms/activityandparticipation/six_m_walk_test/<int:form_id>"
 
     @classmethod
     def get_dependencies(cls):
@@ -1325,7 +1324,11 @@ class _SixMWalkTestView(AppResource):
 
 
 class _Quiz(AppResource):
-    """AppResource responsible for Quiz form creation.
+    """AppResource responsible for any Quiz form creation.
+
+    Notes:
+        The Quiz forms are those from Activity and Participation
+            (except the SixMWalkTest).
 
     """
 
@@ -1361,7 +1364,6 @@ class _Quiz(AppResource):
 
     @authentication_required
     def post(self):
-
         post_body = request.get_json()
 
         try:
@@ -1370,32 +1372,42 @@ class _Quiz(AppResource):
             raise BadRequest("user_id field is missing")
 
         try:
-            form_type = post_body["form_type"]
+            form_t = post_body["form_t"]
         except KeyError:
-            raise BadRequest("form_type field is missing")
+            raise BadRequest("form_t field is missing")
 
         try:
-            data = post_body["data"]
+            answers = post_body["answers"]
         except KeyError:
-            raise BadRequest("data field is missing")
+            raise BadRequest("answers field is missing")
 
         if not isinstance(user_id, int):
-            raise BadRequest("user_id field is not an integer")
-
-        if not isinstance(form_type, str):
-            raise BadRequest("form_type field is not a string")
-
-        if not isinstance(data, list):
-            raise BadRequest("data field is not a list")
+            raise BadRequest("user_id is not an integer")
+        if not isinstance(form_t, str):
+            raise BadRequest("form_t is not a string")
+        if form_t not in ACTIVITYANDPARTICIPATIONFORMTYPEVALUES:
+            raise BadRequest("unknown form_t value")
+        if form_t == "six_m_walk_test":
+            raise BadRequest("invalid form_t value")
+        if not isinstance(answers, list):
+            raise BadRequest("answers is not a list")
 
         form_id = g.session.user.create_form(
-            form_t=FormTypes(form_type), user_id=user_id, form_type=form_type, data=data
+            form_t=FormTypes(form_t), user_id=user_id, answers=answers
         )
 
         return {"_links": {"self": {"href": url_for("_quiz")}}, "form_id": form_id}
 
 
 class _QuizView(AppResource):
+    """AppResource responsible for read and update any Quiz form information.
+
+    Notes:
+        The Quiz forms are those from Activity and Participation
+            (except the SixMWalkTest).
+
+    """
+
     @classmethod
     def get_path(cls):
         """Returns the url path of this AppResource.
@@ -1428,22 +1440,9 @@ class _QuizView(AppResource):
 
     @authentication_required
     def get(self, form_id: int):
-
-        get_body = request.get_json()
-
-        kwargs = {}
-
-        form_type = str()
-
-        if "form_type" in get_body:
-            form_type = get_body["form_type"]
-            if not isinstance(form_type, str):
-                raise BadRequest("form_type is not a string")
-            kwargs["form_type"] = form_type
-
         return {
             "_links": {"self": {"href": url_for("_quizview", form_id=form_id)}},
-            "form": g.session.user.get_serialized_form(FormTypes(form_type), form_id),
+            "form": g.session.user.get_serialized_form(FormTypes("quiz"), form_id),
         }
 
     @authentication_required
@@ -1452,21 +1451,24 @@ class _QuizView(AppResource):
 
         kwargs = {}
 
-        form_type = str()
+        try:
+            form_t = patch_body["form_t"]
+        except KeyError:
+            raise BadRequest("form_t field is missing")
+        if not isinstance(form_t, str):
+            raise BadRequest("form_t is not a string")
+        if form_t not in ACTIVITYANDPARTICIPATIONFORMTYPEVALUES:
+            raise BadRequest("unknown form_t value")
+        if form_t == "six_m_walk_test":
+            raise BadRequest("invalid form_t value")
 
-        if "form_type" in patch_body:
-            form_type = patch_body["form_type"]
-            if not isinstance(form_type, str):
-                raise BadRequest("form_type is not a string")
-            kwargs["form_type"] = form_type
+        if "answers" in patch_body:
+            answers = patch_body["answers"]
+            if not isinstance(answers, list):
+                raise BadRequest("answers is not a list")
+            kwargs["answers"] = answers
 
-        if "data" in patch_body:
-            data = patch_body["data"]
-            if not isinstance(data, list):
-                raise BadRequest("data field is not a list")
-            kwargs["data"] = data
-
-        g.session.user.update_form(FormTypes(form_type), form_id, **kwargs)
+        g.session.user.update_form(FormTypes(form_t), form_id, **kwargs)
 
         return {
             "_links": {"self": {"href": url_for("_quizview", form_id=form_id)}},

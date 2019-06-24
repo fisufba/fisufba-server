@@ -859,3 +859,5 @@ STRUCTUVEANDFUNCTIONFORMTYPEVALUES = {
     FormTypes.PainEvaluation.value,
     FormTypes.MuscleStrength.value,
 }
+
+ACTIVITYANDPARTICIPATIONFORMTYPEVALUES = {}
