@@ -278,8 +278,55 @@ class KineticFunctionalEvaluation(Form):
     preceptor_assessor = CharField(default=None, null=True)
 
 
+class StructureAndFunction(Form):
+    class Meta:
+        table_name = "forms_structure_and_function"
+
+    class StructureAndFunctionTypes(enum.Enum):
+        Goniometry = "goniometry"
+        ArshworthScale = "arshworth_scale"
+        SensoryEvaluation = "sensory_evaluation"
+        RespiratoryMuscleStrength = "respiratory_muscle_strength"
+        Spirometry = "spirometry"
+        PeakFlow = "peak_flow"
+        Ventilometry = "ventilometry"
+        PainEvaluation = "pain_evaluation"
+        MuscleStrength = "muscle_strength"
+        Baropodometry = "baropodometry"
+        Electromyography = "electromyography"
+        Biophotogrammetry = "biophotogrammetry"
+        Dynamometry = "dynamometry"
+
+    type = EnumField(StructureAndFunctionTypes)
+
+
+class StructureAndFunctionMeasure(_BaseModel):
+    class Meta:
+        table_name = "forms_structure_and_function_measure"
+
+    class MeasureTypes(enum.Enum):
+        LeftSide = "left_side"
+        RightSide = "right_side"
+
+        InspirationPressure = "inspiration_pressure"
+        ExpirationPressure = "expiration_pressure"
+
+        PainIntensity = "pain_intensity"
+
+    type = EnumField(MeasureTypes)
+
+    target = CharField(default=None, null=True)
+    value = CharField()
+
+    date = DateField()
+
+    structure_and_function = ForeignKeyField(StructureAndFunction)
+
+
 _FORMS_TABLES = (
     PatientInformation,
     SociodemographicEvaluation,
     KineticFunctionalEvaluation,
+    StructureAndFunction,
+    StructureAndFunctionMeasure,
 )
