@@ -304,18 +304,29 @@ class StructureAndFunctionMeasure(_BaseModel):
     class Meta:
         table_name = "forms_structure_and_function_measure"
 
-    class MeasureTypes(enum.Enum):
-        LeftSide = "left_side"
-        RightSide = "right_side"
+    class TypeTypes(enum.Enum):
+        LeftSide = "E"
+        RightSide = "D"
 
-        InspirationPressure = "inspiration_pressure"
-        ExpirationPressure = "expiration_pressure"
+        MaximumInspirationPressure = "PiMax"
+        MaximumExpirationPressure = "PeMax"
 
-        PainIntensity = "pain_intensity"
+        PainIntensity = "Intensidade da Dor"
+
+    class SensoryTypeTypes(enum.Enum):
+        LightTouch = "Toque Leve"
+        Pressure = "Pressão"
+        Stings = "Picadas"
+        Temperature = "Temperatura"
+        TactileLocation = "Localização Tática"
+        SimultaneousBilateralTouch = "Toque Bilateral Simultâneo"
+        Proprioception = "Propriocepção"
 
     structure_and_function = ForeignKeyField(StructureAndFunction)
 
-    type = EnumField(MeasureTypes)
+    type = EnumField(TypeTypes, default=None, null=True)
+
+    sensory_type = EnumField(SensoryTypeTypes, default=None, null=True)
 
     target = CharField(default=None, null=True)
     value = CharField()

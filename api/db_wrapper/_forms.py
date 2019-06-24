@@ -502,10 +502,29 @@ class StructureAndFunction(Form):
                     query_where_clauses = [
                         forms.StructureAndFunctionMeasure.structure_and_function
                         == self._form,
-                        forms.StructureAndFunctionMeasure.type == measure["type"],
                         forms.StructureAndFunctionMeasure.value == measure["value"],
                         forms.StructureAndFunctionMeasure.date == measure["date"],
                     ]
+
+                    if measure["type"] is None:
+                        query_where_clauses.append(
+                            forms.StructureAndFunctionMeasure.type.is_null()
+                        )
+                    else:
+                        query_where_clauses.append(
+                            forms.StructureAndFunctionMeasure.type == measure["type"]
+                        )
+
+                    if measure["sensory_type"] is None:
+                        query_where_clauses.append(
+                            forms.StructureAndFunctionMeasure.sensory_type.is_null()
+                        )
+                    else:
+                        query_where_clauses.append(
+                            forms.StructureAndFunctionMeasure.sensory_type
+                            == measure["sensory_type"]
+                        )
+
                     if measure["target"] is None:
                         query_where_clauses.append(
                             forms.StructureAndFunctionMeasure.target.is_null()
@@ -548,9 +567,17 @@ class StructureAndFunction(Form):
     def _convert_kwarg_values(self, **kwargs):
         if "measures" in kwargs:
             for measure in kwargs["measures"]:
-                measure["type"] = forms.StructureAndFunctionMeasure.MeasureTypes(
-                    measure["type"]
-                )
+                if measure["type"] is not None:
+                    measure["type"] = forms.StructureAndFunctionMeasure.TypeTypes(
+                        measure["type"]
+                    )
+
+                if measure["sensory_type"] is not None:
+                    measure[
+                        "sensory_type"
+                    ] = forms.StructureAndFunctionMeasure.SensoryTypeTypes(
+                        measure["sensory_type"]
+                    )
 
                 measure["date"] = datetime.date.fromisoformat(measure["date"])
 
@@ -576,7 +603,10 @@ class StructureAndFunction(Form):
         measures = list()
         for _measure in sorted(self._measures, key=lambda x: x.date):
             measure = dict(
-                type=_measure.type.value,
+                type=None if _measure.type is None else _measure.type.value,
+                sensory_type=None
+                if _measure.sensory_type is None
+                else _measure.sensory_type.value,
                 target=_measure.target,
                 value=_measure.value,
                 date=_measure.date.isoformat(),
@@ -604,9 +634,13 @@ class StructureAndFunction(Form):
                 raise TypeError(f"{kwarg} is not a valid keyword argument")
 
         if "measures" in kwargs:
-            valid_measure_kwargs = {"type", "target", "value", "date"}
+            valid_measure_kwargs = {"type", "sensory_type", "target", "value", "date"}
             type_types = set(
-                _type.value for _type in forms.StructureAndFunctionMeasure.MeasureTypes
+                _type.value for _type in forms.StructureAndFunctionMeasure.TypeTypes
+            )
+            sensory_type_types = set(
+                _type.value
+                for _type in forms.StructureAndFunctionMeasure.SensoryTypeTypes
             )
             for measure in kwargs["measures"]:
                 for kwarg in measure.keys():
@@ -618,11 +652,17 @@ class StructureAndFunction(Form):
                         # This is indeed an internal server error.
                         raise TypeError(f"{valid_measure_kwarg} not found")
 
-                if (
+                if measure["type"] is not None and (
                     not isinstance(measure["type"], str)
                     or measure["type"] not in type_types
                 ):
                     raise BadRequest("invalid measure type value")
+
+                if measure["sensory_type"] is not None and (
+                    not isinstance(measure["sensory_type"], str)
+                    or measure["sensory_type"] not in sensory_type_types
+                ):
+                    raise BadRequest("invalid measure sensory type value")
 
                 if measure["target"] is not None and not isinstance(
                     measure["target"], str
@@ -652,11 +692,139 @@ class Goniometry(StructureAndFunction):
         if "measures" in kwargs:
             for measure in kwargs["measures"]:
                 valid_type_types = {
-                    forms.StructureAndFunctionMeasure.MeasureTypes.LeftSide.value,
-                    forms.StructureAndFunctionMeasure.MeasureTypes.RightSide.value,
+                    forms.StructureAndFunctionMeasure.TypeTypes.LeftSide.value,
+                    forms.StructureAndFunctionMeasure.TypeTypes.RightSide.value,
                 }
                 if measure["type"] not in valid_type_types:
                     raise BadRequest("invalid measure type value")
+
+                if measure["sensory_type"] is not None:
+                    raise BadRequest("invalid measure sensory type value")
+
+                if measure["target"] is None:
+                    raise BadRequest("invalid measure target value")
+
+
+class ArshworthScale(StructureAndFunction):
+    _structure_and_function_type = (
+        forms.StructureAndFunction.StructureAndFunctionTypes.ArshworthScale
+    )
+
+    def _validate_kwargs(self, **kwargs):
+        super()._validate_kwargs(**kwargs)
+
+        if "measures" in kwargs:
+            for measure in kwargs["measures"]:
+                valid_type_types = {
+                    forms.StructureAndFunctionMeasure.TypeTypes.LeftSide.value,
+                    forms.StructureAndFunctionMeasure.TypeTypes.RightSide.value,
+                }
+                if measure["type"] not in valid_type_types:
+                    raise BadRequest("invalid measure type value")
+
+                if measure["sensory_type"] is not None:
+                    raise BadRequest("invalid measure sensory type value")
+
+                if measure["target"] is None:
+                    raise BadRequest("invalid measure target value")
+
+
+class SensoryEvaluation(StructureAndFunction):
+    _structure_and_function_type = (
+        forms.StructureAndFunction.StructureAndFunctionTypes.SensoryEvaluation
+    )
+
+    def _validate_kwargs(self, **kwargs):
+        super()._validate_kwargs(**kwargs)
+
+        if "measures" in kwargs:
+            for measure in kwargs["measures"]:
+                valid_type_types = {
+                    forms.StructureAndFunctionMeasure.TypeTypes.LeftSide.value,
+                    forms.StructureAndFunctionMeasure.TypeTypes.RightSide.value,
+                }
+                if (
+                    measure["type"] is not None
+                    and measure["type"] not in valid_type_types
+                ):
+                    raise BadRequest("invalid measure type value")
+
+                if measure["sensory_type"] is None:
+                    raise BadRequest("invalid measure sensory type value")
+
+                if measure["target"] is None:
+                    raise BadRequest("invalid measure target value")
+
+
+class RespiratoryMuscleStrength(StructureAndFunction):
+    _structure_and_function_type = (
+        forms.StructureAndFunction.StructureAndFunctionTypes.RespiratoryMuscleStrength
+    )
+
+    def _validate_kwargs(self, **kwargs):
+        super()._validate_kwargs(**kwargs)
+
+        if "measures" in kwargs:
+            for measure in kwargs["measures"]:
+                valid_type_types = {
+                    forms.StructureAndFunctionMeasure.TypeTypes.MaximumInspirationPressure.value,
+                    forms.StructureAndFunctionMeasure.TypeTypes.MaximumExpirationPressure.value,
+                }
+                if measure["type"] not in valid_type_types:
+                    raise BadRequest("invalid measure type value")
+
+                if measure["sensory_type"] is not None:
+                    raise BadRequest("invalid measure sensory type value")
+
+                if measure["target"] is not None:
+                    raise BadRequest("invalid measure target value")
+
+
+class PainEvaluation(StructureAndFunction):
+    _structure_and_function_type = (
+        forms.StructureAndFunction.StructureAndFunctionTypes.PainEvaluation
+    )
+
+    def _validate_kwargs(self, **kwargs):
+        super()._validate_kwargs(**kwargs)
+
+        if "measures" in kwargs:
+            for measure in kwargs["measures"]:
+                valid_type_types = {
+                    forms.StructureAndFunctionMeasure.TypeTypes.PainIntensity.value
+                }
+                if measure["type"] not in valid_type_types:
+                    raise BadRequest("invalid measure type value")
+
+                if measure["sensory_type"] is not None:
+                    raise BadRequest("invalid measure sensory type value")
+
+                if measure["target"] is not None:
+                    raise BadRequest("invalid measure target value")
+
+                if not measure["value"].isdigit() or not (0 <= measure["value"] <= 10):
+                    raise BadRequest("invalid measure value value")
+
+
+class MuscleStrength(StructureAndFunction):
+    _structure_and_function_type = (
+        forms.StructureAndFunction.StructureAndFunctionTypes.MuscleStrength
+    )
+
+    def _validate_kwargs(self, **kwargs):
+        super()._validate_kwargs(**kwargs)
+
+        if "measures" in kwargs:
+            for measure in kwargs["measures"]:
+                valid_type_types = {
+                    forms.StructureAndFunctionMeasure.TypeTypes.LeftSide.value,
+                    forms.StructureAndFunctionMeasure.TypeTypes.RightSide.value,
+                }
+                if measure["type"] not in valid_type_types:
+                    raise BadRequest("invalid measure type value")
+
+                if measure["sensory_type"] is not None:
+                    raise BadRequest("invalid measure sensory type value")
 
                 if measure["target"] is None:
                     raise BadRequest("invalid measure target value")
@@ -667,3 +835,8 @@ class FormTypes(enum.Enum):
     SociodemographicEvaluation = "sociodemographic_evaluation"
     KineticFunctionalEvaluation = "kinetic_functional_evaluation"
     Goniometry = "goniometry"
+    ArshworthScale = "arshworth_scale"
+    SensoryEvaluation = "sensory_evaluation"
+    RespiratoryMuscleStrength = "respiratory_muscle_strength"
+    PainEvaluation = "pain_evaluation"
+    MuscleStrength = "muscle_strength"
