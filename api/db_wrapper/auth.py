@@ -257,8 +257,8 @@ class User:
             form = forms_wrapper.KineticFunctionalEvaluation()
         elif form_t is forms_wrapper.FormTypes.Goniometry:
             form = forms_wrapper.Goniometry()
-        elif form_t is forms_wrapper.FormTypes.ArshworthScale:
-            form = forms_wrapper.ArshworthScale()
+        elif form_t is forms_wrapper.FormTypes.AshworthScale:
+            form = forms_wrapper.AshworthScale()
         elif form_t is forms_wrapper.FormTypes.SensoryEvaluation:
             form = forms_wrapper.SensoryEvaluation()
         elif form_t is forms_wrapper.FormTypes.RespiratoryMuscleStrength:
@@ -294,8 +294,8 @@ class User:
             form = forms_wrapper.KineticFunctionalEvaluation(form_id)
         elif form_t is forms_wrapper.FormTypes.Goniometry:
             form = forms_wrapper.Goniometry(form_id)
-        elif form_t is forms_wrapper.FormTypes.ArshworthScale:
-            form = forms_wrapper.ArshworthScale(form_id)
+        elif form_t is forms_wrapper.FormTypes.AshworthScale:
+            form = forms_wrapper.AshworthScale(form_id)
         elif form_t is forms_wrapper.FormTypes.SensoryEvaluation:
             form = forms_wrapper.SensoryEvaluation(form_id)
         elif form_t is forms_wrapper.FormTypes.RespiratoryMuscleStrength:
@@ -321,8 +321,8 @@ class User:
             form = forms_wrapper.KineticFunctionalEvaluation(form_id)
         elif form_t is forms_wrapper.FormTypes.Goniometry:
             form = forms_wrapper.Goniometry(form_id)
-        elif form_t is forms_wrapper.FormTypes.ArshworthScale:
-            form = forms_wrapper.ArshworthScale(form_id)
+        elif form_t is forms_wrapper.FormTypes.AshworthScale:
+            form = forms_wrapper.AshworthScale(form_id)
         elif form_t is forms_wrapper.FormTypes.SensoryEvaluation:
             form = forms_wrapper.SensoryEvaluation(form_id)
         elif form_t is forms_wrapper.FormTypes.RespiratoryMuscleStrength:

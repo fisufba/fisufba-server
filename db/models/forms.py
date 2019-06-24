@@ -85,7 +85,7 @@ class KineticFunctionalEvaluation(Form):
 
     class StructureAndFunctionTypes(enum.Flag):
         Goniometry = 1
-        ArshworthScale = 2
+        AshworthScale = 2
         SensoryEvaluation = 4
         RespiratoryMuscleStrength = 8
         Spirometry = 16
@@ -120,7 +120,7 @@ class KineticFunctionalEvaluation(Form):
         def from_string(cls, string):
             convert_table = {
                 "Goniometria": cls.Goniometry,
-                "Escala de Ashworth": cls.ArshworthScale,
+                "Escala de Ashworth": cls.AshworthScale,
                 "Avaliação Sensorial": cls.SensoryEvaluation,
                 "Força Muscular Respiratória": cls.RespiratoryMuscleStrength,
                 "Espirometria": cls.Spirometry,
@@ -139,7 +139,7 @@ class KineticFunctionalEvaluation(Form):
         def to_string(cls, enum_item):
             convert_table = {
                 cls.Goniometry: "Goniometria",
-                cls.ArshworthScale: "Escala de Ashworth",
+                cls.AshworthScale: "Escala de Ashworth",
                 cls.SensoryEvaluation: "Avaliação Sensorial",
                 cls.RespiratoryMuscleStrength: "Força Muscular Respiratória",
                 cls.Spirometry: "Espirometria",
@@ -284,7 +284,7 @@ class StructureAndFunction(Form):
 
     class StructureAndFunctionTypes(enum.Enum):
         Goniometry = "goniometry"
-        ArshworthScale = "arshworth_scale"
+        AshworthScale = "ashworth_scale"
         SensoryEvaluation = "sensory_evaluation"
         RespiratoryMuscleStrength = "respiratory_muscle_strength"
         Spirometry = "spirometry"

@@ -705,9 +705,9 @@ class Goniometry(StructureAndFunction):
                     raise BadRequest("invalid measure target value")
 
 
-class ArshworthScale(StructureAndFunction):
+class AshworthScale(StructureAndFunction):
     _structure_and_function_type = (
-        forms.StructureAndFunction.StructureAndFunctionTypes.ArshworthScale
+        forms.StructureAndFunction.StructureAndFunctionTypes.AshworthScale
     )
 
     def _validate_kwargs(self, **kwargs):
@@ -835,7 +835,7 @@ class FormTypes(enum.Enum):
     SociodemographicEvaluation = "sociodemographic_evaluation"
     KineticFunctionalEvaluation = "kinetic_functional_evaluation"
     Goniometry = "goniometry"
-    ArshworthScale = "arshworth_scale"
+    AshworthScale = "ashworth_scale"
     SensoryEvaluation = "sensory_evaluation"
     RespiratoryMuscleStrength = "respiratory_muscle_strength"
     PainEvaluation = "pain_evaluation"
