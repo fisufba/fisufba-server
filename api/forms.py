@@ -88,22 +88,28 @@ class FormsIndex(AppResource):
                     "href": url_for("_musclestrengthview", form_id=0),
                     "templated": True,
                 },
-                "forms:ashworth": {"href": url_for("_ashworth"), "templated": True},
-                "forms:ashworthview": {
-                    "href": url_for("_ashworthview", form_id=0),
+                "forms:ashworthscale": {
+                    "href": url_for("_ashworthscale"),
                     "templated": True,
                 },
-                "forms:painintensity": {
-                    "href": url_for("_painintensity"),
+                "forms:ashworthscaleview": {
+                    "href": url_for("_ashworthscaleview", form_id=0),
                     "templated": True,
                 },
-                "forms:painintensityview": {
-                    "href": url_for("_painintensityview", form_id=0),
+                "forms:painevaluation": {
+                    "href": url_for("_painevaluation"),
                     "templated": True,
                 },
-                "forms:pipe": {"href": url_for("_pipe"), "templated": True},
-                "forms:pipeview": {
-                    "href": url_for("_pipeview", form_id=0),
+                "forms:painevaluationview": {
+                    "href": url_for("_painevaluationview", form_id=0),
+                    "templated": True,
+                },
+                "forms:respiratorymusclestrength": {
+                    "href": url_for("_respiratorymusclestrength"),
+                    "templated": True,
+                },
+                "forms:respiratorymusclestrengthview": {
+                    "href": url_for("_respiratorymusclestrengthview", form_id=0),
                     "templated": True,
                 },
                 "forms:sensoryevaluation": {
@@ -1220,7 +1226,6 @@ class _MuscleStrength(AppResource):
 
     @authentication_required
     def post(self):
-
         post_body = request.get_json()
 
         try:
@@ -1229,18 +1234,17 @@ class _MuscleStrength(AppResource):
             raise BadRequest("user_id field is missing")
 
         try:
-            data = post_body["data"]
+            measures = post_body["measures"]
         except KeyError:
-            raise BadRequest("data field is missing")
+            raise BadRequest("measures field is missing")
 
         if not isinstance(user_id, int):
-            raise BadRequest("user_id field is not an integer")
-
-        if not isinstance(data, dict):
-            raise BadRequest("data field is not a dict")
+            raise BadRequest("user_id is not an integer")
+        if not isinstance(measures, list):
+            raise BadRequest("measures is not a list")
 
         form_id = g.session.user.create_form(
-            form_t=FormTypes("muscle_strength"), user_id=user_id, data=data
+            form_t=FormTypes("muscle_strength"), user_id=user_id, measures=measures
         )
 
         return {
@@ -1250,6 +1254,10 @@ class _MuscleStrength(AppResource):
 
 
 class _MuscleStrengthView(AppResource):
+    """AppResource responsible for read and update MuscleStrength form information.
+
+    """
+
     @classmethod
     def get_path(cls):
         """Returns the url path of this AppResource.
@@ -1297,11 +1305,11 @@ class _MuscleStrengthView(AppResource):
 
         kwargs = {}
 
-        if "data" in patch_body:
-            data = patch_body["data"]
-            if not isinstance(data, dict):
-                raise BadRequest("data field is not a dict")
-            kwargs["data"] = data
+        if "measures" in patch_body:
+            measures = patch_body["measures"]
+            if not isinstance(measures, list):
+                raise BadRequest("measures is not a list")
+            kwargs["measures"] = measures
 
         g.session.user.update_form(FormTypes("muscle_strength"), form_id, **kwargs)
 
