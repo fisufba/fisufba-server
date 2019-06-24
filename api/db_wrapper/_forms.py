@@ -802,7 +802,9 @@ class PainEvaluation(StructureAndFunction):
                 if measure["target"] is not None:
                     raise BadRequest("invalid measure target value")
 
-                if not measure["value"].isdigit() or not (0 <= measure["value"] <= 10):
+                if not measure["value"].isdigit() or not (
+                    0 <= int(measure["value"]) <= 10
+                ):
                     raise BadRequest("invalid measure value value")
 
 
@@ -842,11 +844,11 @@ class FormTypes(enum.Enum):
     MuscleStrength = "muscle_strength"
 
 
-STRUCTUVEANDFUNCTIONFORMTYPES = {
-    FormTypes.Goniometry,
-    FormTypes.AshworthScale,
-    FormTypes.SensoryEvaluation,
-    FormTypes.RespiratoryMuscleStrength,
-    FormTypes.PainEvaluation,
-    FormTypes.MuscleStrength,
+STRUCTUVEANDFUNCTIONFORMTYPEVALUES = {
+    FormTypes.Goniometry.value,
+    FormTypes.AshworthScale.value,
+    FormTypes.SensoryEvaluation.value,
+    FormTypes.RespiratoryMuscleStrength.value,
+    FormTypes.PainEvaluation.value,
+    FormTypes.MuscleStrength.value,
 }

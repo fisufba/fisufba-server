@@ -19,9 +19,13 @@ class EnumField(CharField):
         self.max_length = 255
 
     def db_value(self, value: Any) -> Any:
+        if value is None:
+            return None
         return value.value
 
     def python_value(self, value: Any) -> Any:
+        if value is None:
+            return None
         cast = type(list(self.choices)[0].value)
         assert all(isinstance(choice.value, cast) for choice in list(self.choices))
         return self.choices(cast(value))

@@ -4,7 +4,7 @@ from werkzeug.exceptions import BadRequest
 from api.abc import AppResource
 from api.abc import authentication_required
 from api.db_wrapper import FormTypes
-from api.db_wrapper import STRUCTUVEANDFUNCTIONFORMTYPES
+from api.db_wrapper import STRUCTUVEANDFUNCTIONFORMTYPEVALUES
 
 
 class FormsIndex(AppResource):
@@ -77,12 +77,12 @@ class FormsIndex(AppResource):
                     "templated": True,
                 },
                 "forms:structureandfunction": {
-                    "href": url_for("_structureandfunction", form_t="form_t"),
+                    "href": url_for("_structureandfunction", form_t="string:form_t"),
                     "templated": True,
                 },
                 "forms:structureandfunctionview": {
                     "href": url_for(
-                        "_structureandfunction", form_t="form_t", form_id=0
+                        "_structureandfunctionview", form_t="string:form_t", form_id=0
                     ),
                     "templated": True,
                 },
@@ -1064,7 +1064,7 @@ class _StructureAndFunction(AppResource):
 
     @authentication_required
     def post(self, form_t: str):
-        if FormTypes(form_t) not in STRUCTUVEANDFUNCTIONFORMTYPES:
+        if form_t not in STRUCTUVEANDFUNCTIONFORMTYPEVALUES:
             raise BadRequest("unknown form_t value")
 
         post_body = request.get_json()
@@ -1112,7 +1112,7 @@ class _StructureAndFunctionView(AppResource):
             An url path.
 
         """
-        return "/forms/structureandinformation/<string:form_t>/<int:form_id>"
+        return "/forms/structureandfunction/<string:form_t>/<int:form_id>"
 
     @classmethod
     def get_dependencies(cls):
@@ -1133,7 +1133,7 @@ class _StructureAndFunctionView(AppResource):
 
     @authentication_required
     def get(self, form_t: str, form_id: int):
-        if FormTypes(form_t) not in STRUCTUVEANDFUNCTIONFORMTYPES:
+        if form_t not in STRUCTUVEANDFUNCTIONFORMTYPEVALUES:
             raise BadRequest("unknown form_t value")
 
         return {
@@ -1149,7 +1149,7 @@ class _StructureAndFunctionView(AppResource):
 
     @authentication_required
     def patch(self, form_t: str, form_id: int):
-        if FormTypes(form_t) not in STRUCTUVEANDFUNCTIONFORMTYPES:
+        if form_t not in STRUCTUVEANDFUNCTIONFORMTYPEVALUES:
             raise BadRequest("unknown form_t value")
 
         patch_body = request.get_json()
