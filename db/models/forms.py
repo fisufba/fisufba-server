@@ -313,14 +313,14 @@ class StructureAndFunctionMeasure(_BaseModel):
 
         PainIntensity = "pain_intensity"
 
+    structure_and_function = ForeignKeyField(StructureAndFunction)
+
     type = EnumField(MeasureTypes)
 
     target = CharField(default=None, null=True)
     value = CharField()
 
     date = DateField()
-
-    structure_and_function = ForeignKeyField(StructureAndFunction)
 
 
 _FORMS_TABLES = (

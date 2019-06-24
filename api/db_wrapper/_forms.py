@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 import peewee
 from werkzeug.exceptions import BadRequest, Conflict, NotFound
 
-from db.models import auth, forms
+from db.models import auth, base, forms
 
 
 class Form(ABC):
@@ -422,7 +422,248 @@ class KineticFunctionalEvaluation(Form):
                     raise BadRequest("reevaluate date is malformed")
 
 
+class StructureAndFunction(Form):
+    _db_model = forms.StructureAndFunction
+    _structure_and_function_type: forms.StructureAndFunction.StructureAndFunctionTypes = None
+
+    def __init__(self, _id: int = None):
+        super().__init__(_id)
+
+        self._measures = None
+
+        if self._form is not None:
+            try:
+                query = forms.StructureAndFunctionMeasure.select().where(
+                    forms.StructureAndFunctionMeasure.structure_and_function
+                    == self._form
+                )
+
+                self._measures = query.execute()
+                if len(self._measures) == 0:
+                    raise forms.StructureAndFunctionMeasure.DoesNotExist
+            except forms.StructureAndFunctionMeasure.DoesNotExist:
+                raise NotFound("form measures not found")
+
+    def create(self, user: auth.User, **kwargs) -> int:
+        if self._form is not None:
+            # This is indeed an internal server error.
+            raise Exception("instantiated form can't create other")
+
+        self._validate_kwargs(**kwargs)
+
+        creation_kwargs = self._convert_kwarg_values(**kwargs)
+
+        with base.db.atomic() as transaction:
+            try:
+                try:
+                    self._form = self._db_model.create(
+                        user=user, type=self._structure_and_function_type
+                    )
+                except peewee.IntegrityError:
+                    raise Conflict("form already exists")
+
+                _measures = list()
+                for measure in creation_kwargs["measures"]:
+                    try:
+                        _measure = forms.StructureAndFunctionMeasure.create(
+                            structure_and_function=self._form, **measure
+                        )
+                    except peewee.IntegrityError:
+                        raise Conflict("form measure already exists")
+                    _measures.append(_measure)
+                self._measures = _measures
+            except Exception:
+                transaction.rollback()
+                raise
+
+        return self._form.id
+
+    def update(self, **kwargs):
+        if self._form is None:
+            # This is indeed an internal server error.
+            raise Exception("form was not properly instantiated")
+
+        self._validate_kwargs(**kwargs)
+
+        update_kwargs = self._convert_kwarg_values(**kwargs)
+
+        with base.db.atomic() as transaction:
+            try:
+                query = self._db_model.update(
+                    updated_at=datetime.datetime.utcnow()
+                ).where(self._db_model.id == self._form.id)
+
+                if query.execute() == 0:
+                    # This is indeed an internal server error.
+                    raise Exception("update failed")
+
+                _measures = list()
+                for measure in update_kwargs["measures"]:
+                    query_where_clauses = [
+                        forms.StructureAndFunctionMeasure.structure_and_function
+                        == self._form,
+                        forms.StructureAndFunctionMeasure.type == measure["type"],
+                        forms.StructureAndFunctionMeasure.value == measure["value"],
+                        forms.StructureAndFunctionMeasure.date == measure["date"],
+                    ]
+                    if measure["target"] is None:
+                        query_where_clauses.append(
+                            forms.StructureAndFunctionMeasure.target.is_null()
+                        )
+                    else:
+                        query_where_clauses.append(
+                            forms.StructureAndFunctionMeasure.target
+                            == measure["target"]
+                        )
+
+                    try:
+                        _measure = forms.StructureAndFunctionMeasure.get(
+                            *query_where_clauses
+                        )
+                    except forms.StructureAndFunctionMeasure.DoesNotExist:
+                        try:
+                            _measure = forms.StructureAndFunctionMeasure.create(
+                                structure_and_function=self._form, **measure
+                            )
+                        except peewee.IntegrityError:
+                            # This is indeed an internal server error.
+                            raise Exception("form measure already exists")
+                    _measures.append(_measure)
+
+                to_delete = [
+                    _measure.id
+                    for _measure in self._measures
+                    if _measure not in _measures
+                ]
+                forms.StructureAndFunctionMeasure.delete().where(
+                    forms.StructureAndFunctionMeasure.id << to_delete
+                ).execute()
+
+            except Exception:
+                transaction.rollback()
+                raise
+
+        self._restore()
+
+    def _convert_kwarg_values(self, **kwargs):
+        if "measures" in kwargs:
+            for measure in kwargs["measures"]:
+                measure["type"] = forms.StructureAndFunctionMeasure.MeasureTypes(
+                    measure["type"]
+                )
+
+                measure["date"] = datetime.date.fromisoformat(measure["date"])
+
+        return kwargs
+
+    def _restore(self):
+        super()._restore()
+
+        try:
+            query = forms.StructureAndFunctionMeasure.select().where(
+                forms.StructureAndFunctionMeasure.structure_and_function == self._form
+            )
+
+            self._measures = query.execute()
+            if len(self._measures) == 0:
+                # This is indeed an internal server error.
+                raise Exception("form measures not found")
+        except forms.StructureAndFunctionMeasure.DoesNotExist:
+            # This is indeed an internal server error.
+            raise Exception("form measures not found")
+
+    def _serialized(self):
+        measures = list()
+        for _measure in sorted(self._measures, key=lambda x: x.date):
+            measure = dict(
+                type=_measure.type.value,
+                target=_measure.target,
+                value=_measure.value,
+                date=_measure.date.isoformat(),
+            )
+            measures.append(measure)
+
+        return dict(
+            id=self._form.id,
+            user_id=self._form.user.id,
+            type=self._form.type.value,
+            measures=measures,
+            updated_at=None
+            if self._form.updated_at is None
+            else self._form.updated_at.isoformat(),
+            created_at=None
+            if self._form.created_at is None
+            else self._form.created_at.isoformat(),
+        )
+
+    def _validate_kwargs(self, **kwargs):
+        valid_kwargs = {"measures"}
+        for kwarg in kwargs.keys():
+            if kwarg not in valid_kwargs:
+                # This is indeed an internal server error.
+                raise TypeError(f"{kwarg} is not a valid keyword argument")
+
+        if "measures" in kwargs:
+            valid_measure_kwargs = {"type", "target", "value", "date"}
+            type_types = set(
+                _type.value for _type in forms.StructureAndFunctionMeasure.MeasureTypes
+            )
+            for measure in kwargs["measures"]:
+                for kwarg in measure.keys():
+                    if kwarg not in valid_measure_kwargs:
+                        # This is indeed an internal server error.
+                        raise TypeError(f"{kwarg} is not a valid keyword argument")
+                for valid_measure_kwarg in valid_measure_kwargs:
+                    if valid_measure_kwarg not in measure:
+                        # This is indeed an internal server error.
+                        raise TypeError(f"{valid_measure_kwarg} not found")
+
+                if (
+                    not isinstance(measure["type"], str)
+                    or measure["type"] not in type_types
+                ):
+                    raise BadRequest("invalid measure type value")
+
+                if measure["target"] is not None and not isinstance(
+                    measure["target"], str
+                ):
+                    raise BadRequest("invalid measure target value")
+
+                if not isinstance(measure["value"], str):
+                    raise BadRequest("invalid measure value value")
+
+                if not isinstance(measure["date"], str):
+                    raise BadRequest("invalid measure date value")
+
+                try:
+                    _ = datetime.date.fromisoformat(measure["date"])
+                except ValueError:
+                    raise BadRequest("malformed measure date")
+
+
+class Goniometry(StructureAndFunction):
+    _structure_and_function_type = (
+        forms.StructureAndFunction.StructureAndFunctionTypes.Goniometry
+    )
+
+    def _validate_kwargs(self, **kwargs):
+        super()._validate_kwargs(**kwargs)
+
+        if "measures" in kwargs:
+            for measure in kwargs["measures"]:
+                valid_type_types = {
+                    forms.StructureAndFunctionMeasure.MeasureTypes.LeftSide.value,
+                    forms.StructureAndFunctionMeasure.MeasureTypes.RightSide.value,
+                }
+                if measure["type"] not in valid_type_types:
+                    raise BadRequest("invalid measure type value")
+
+                if measure["target"] is None:
+                    raise BadRequest("invalid measure target value")
+
+
 class FormTypes(enum.Enum):
     PatientInformation = "patient_information"
     SociodemographicEvaluation = "sociodemographic_evaluation"
     KineticFunctionalEvaluation = "kinetic_functional_evaluation"
+    Goniometry = "goniometry"

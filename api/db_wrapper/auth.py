@@ -255,6 +255,8 @@ class User:
             form = forms_wrapper.SociodemographicEvaluation()
         elif form_t is forms_wrapper.FormTypes.KineticFunctionalEvaluation:
             form = forms_wrapper.KineticFunctionalEvaluation()
+        elif form_t is forms_wrapper.FormTypes.Goniometry:
+            form = forms_wrapper.Goniometry()
         else:
             # This is indeed an internal server error.
             raise NotImplementedError("unexpected form type")
@@ -280,6 +282,8 @@ class User:
             form = forms_wrapper.SociodemographicEvaluation(form_id)
         elif form_t is forms_wrapper.FormTypes.KineticFunctionalEvaluation:
             form = forms_wrapper.KineticFunctionalEvaluation(form_id)
+        elif form_t is forms_wrapper.FormTypes.Goniometry:
+            form = forms_wrapper.Goniometry(form_id)
         else:
             # This is indeed an internal server error.
             raise NotImplementedError("unexpected form type")
@@ -295,6 +299,8 @@ class User:
             form = forms_wrapper.SociodemographicEvaluation(form_id)
         elif form_t is forms_wrapper.FormTypes.KineticFunctionalEvaluation:
             form = forms_wrapper.KineticFunctionalEvaluation(form_id)
+        elif form_t is forms_wrapper.FormTypes.Goniometry:
+            form = forms_wrapper.Goniometry(form_id)
         else:
             # This is indeed an internal server error.
             raise NotImplementedError("unexpected form type")
