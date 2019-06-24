@@ -1313,8 +1313,8 @@ class _MuscleStrengthView(AppResource):
         }
 
 
-class _Ashworth(AppResource):
-    """AppResource responsible for Ashworth form creation.
+class _AshworthScale(AppResource):
+    """AppResource responsible for AshworthScale form creation.
 
     """
 
@@ -1329,7 +1329,7 @@ class _Ashworth(AppResource):
             An url path.
 
         """
-        return "/forms/ashworth"
+        return "/forms/ashworthscale"
 
     @classmethod
     def get_dependencies(cls):
@@ -1350,7 +1350,6 @@ class _Ashworth(AppResource):
 
     @authentication_required
     def post(self):
-
         post_body = request.get_json()
 
         try:
@@ -1359,24 +1358,30 @@ class _Ashworth(AppResource):
             raise BadRequest("user_id field is missing")
 
         try:
-            data = post_body["data"]
+            measures = post_body["measures"]
         except KeyError:
-            raise BadRequest("data field is missing")
+            raise BadRequest("measures field is missing")
 
         if not isinstance(user_id, int):
-            raise BadRequest("user_id field is not an integer")
-
-        if not isinstance(data, dict):
-            raise BadRequest("data field is not a dict")
+            raise BadRequest("user_id is not an integer")
+        if not isinstance(measures, list):
+            raise BadRequest("measures is not a list")
 
         form_id = g.session.user.create_form(
-            form_t=FormTypes("ashworth"), user_id=user_id, data=data
+            form_t=FormTypes("ashworth_scale"), user_id=user_id, measures=measures
         )
 
-        return {"_links": {"self": {"href": url_for("_ashworth")}}, "form_id": form_id}
+        return {
+            "_links": {"self": {"href": url_for("_ashworthscale")}},
+            "form_id": form_id,
+        }
 
 
-class _AshworthView(AppResource):
+class _AshworthScaleView(AppResource):
+    """AppResource responsible for read and update AshworthScale form information.
+
+    """
+
     @classmethod
     def get_path(cls):
         """Returns the url path of this AppResource.
@@ -1388,7 +1393,7 @@ class _AshworthView(AppResource):
             An url path.
 
         """
-        return "/forms/ashworth/<int:form_id>"
+        return "/forms/ashworthscale/<int:form_id>"
 
     @classmethod
     def get_dependencies(cls):
@@ -1411,134 +1416,8 @@ class _AshworthView(AppResource):
     def get(self, form_id: int):
         return {
             "_links": {"self": {"href": url_for("_ashworthview", form_id=form_id)}},
-            "form": g.session.user.get_serialized_form(FormTypes("ashworth"), form_id),
-        }
-
-    @authentication_required
-    def patch(self, form_id: int):
-        patch_body = request.get_json()
-
-        kwargs = {}
-
-        if "data" in patch_body:
-            data = patch_body["data"]
-            if not isinstance(data, dict):
-                raise BadRequest("data field is not a dict")
-            kwargs["data"] = data
-
-        g.session.user.update_form(FormTypes("ashworth"), form_id, **kwargs)
-
-        return {
-            "_links": {"self": {"href": url_for("_ashworthview", form_id=form_id)}},
-            "form_id": form_id,
-        }
-
-
-class _PainIntensity(AppResource):
-    """AppResource responsible for PainIntensity form creation.
-
-    """
-
-    @classmethod
-    def get_path(cls):
-        """Returns the url path of this AppResource.
-
-        Raises:
-            NotImplementedError: When not implemented by AppResource's children.
-
-        Returns:
-            An url path.
-
-        """
-        return "/forms/painintensity"
-
-    @classmethod
-    def get_dependencies(cls):
-        """Returns the dependencies of this AppResource.
-
-        Notes:
-            If there's no dependency this must return an empty set.
-
-        Raises:
-            NotImplementedError: When not implemented by AppResource's children.
-
-        Returns:
-            A set of module names that contains AppResource
-                classes used by this AppResource.
-
-        """
-        return set()
-
-    @authentication_required
-    def post(self):
-
-        post_body = request.get_json()
-
-        try:
-            user_id = post_body["user_id"]
-        except KeyError:
-            raise BadRequest("user_id field is missing")
-
-        try:
-            data = post_body["data"]
-        except KeyError:
-            raise BadRequest("data field is missing")
-
-        if not isinstance(user_id, int):
-            raise BadRequest("user_id field is not an integer")
-
-        if not isinstance(data, dict):
-            raise BadRequest("data field is not a dict")
-
-        form_id = g.session.user.create_form(
-            form_t=FormTypes("pain_intensity"), user_id=user_id, data=data
-        )
-
-        return {
-            "_links": {"self": {"href": url_for("_painintensity")}},
-            "form_id": form_id,
-        }
-
-
-class _PainIntensityView(AppResource):
-    @classmethod
-    def get_path(cls):
-        """Returns the url path of this AppResource.
-
-        Raises:
-            NotImplementedError: When not implemented by AppResource's children.
-
-        Returns:
-            An url path.
-
-        """
-        return "/forms/painintensity/<int:form_id>"
-
-    @classmethod
-    def get_dependencies(cls):
-        """Returns the dependencies of this AppResource.
-
-        Notes:
-            If there's no dependency this must return an empty se-t.
-
-        Raises:
-            NotImplementedError: When not implemented by AppResource's children.
-
-        Returns:
-            A set of module names that contains AppResource
-                classes used by this AppResource.
-
-        """
-        return set()
-
-    @authentication_required
-    def get(self, form_id: int):
-        return {
-            "_links": {
-                "self": {"href": url_for("_painintensityview", form_id=form_id)}
-            },
             "form": g.session.user.get_serialized_form(
-                FormTypes("pain_intensity"), form_id
+                FormTypes("ashworth_scale"), form_id
             ),
         }
 
@@ -1548,24 +1427,24 @@ class _PainIntensityView(AppResource):
 
         kwargs = {}
 
-        if "data" in patch_body:
-            data = patch_body["data"]
-            if not isinstance(data, dict):
-                raise BadRequest("data field is not a dict")
-            kwargs["data"] = data
+        if "measures" in patch_body:
+            measures = patch_body["measures"]
+            if not isinstance(measures, list):
+                raise BadRequest("measures is not a list")
+            kwargs["measures"] = measures
 
-        g.session.user.update_form(FormTypes("pain_intensity"), form_id, **kwargs)
+        g.session.user.update_form(FormTypes("ashworth_scale"), form_id, **kwargs)
 
         return {
             "_links": {
-                "self": {"href": url_for("_painintensityview", form_id=form_id)}
+                "self": {"href": url_for("_ashworthscaleview", form_id=form_id)}
             },
             "form_id": form_id,
         }
 
 
-class _PiPe(AppResource):
-    """AppResource responsible for SensoryEvaluation form creation.
+class _PainEvaluation(AppResource):
+    """AppResource responsible for PainEvaluation form creation.
 
     """
 
@@ -1580,7 +1459,7 @@ class _PiPe(AppResource):
             An url path.
 
         """
-        return "/forms/pipe"
+        return "/forms/painevaluation"
 
     @classmethod
     def get_dependencies(cls):
@@ -1601,7 +1480,6 @@ class _PiPe(AppResource):
 
     @authentication_required
     def post(self):
-
         post_body = request.get_json()
 
         try:
@@ -1610,35 +1488,30 @@ class _PiPe(AppResource):
             raise BadRequest("user_id field is missing")
 
         try:
-            respiratory_muscle_strength = post_body["respiratory_muscle_strength"]
+            measures = post_body["measures"]
         except KeyError:
-            raise BadRequest("respiratory_muscle_strength field is missing")
-
-        try:
-            predictive_value = post_body["predictive_value"]
-        except KeyError:
-            raise BadRequest("predictive_value field is missing")
+            raise BadRequest("measures field is missing")
 
         if not isinstance(user_id, int):
-            raise BadRequest("user_id field is not an integer")
-
-        if not isinstance(respiratory_muscle_strength, dict):
-            raise BadRequest("respiratory_muscle_strength field is not a dict")
-
-        if not isinstance(predictive_value, dict):
-            raise BadRequest("predictive_value field is not a dict")
+            raise BadRequest("user_id is not an integer")
+        if not isinstance(measures, list):
+            raise BadRequest("measures is not a list")
 
         form_id = g.session.user.create_form(
-            form_t=FormTypes("pi_pe"),
-            user_id=user_id,
-            respiratory_muscle_strength=respiratory_muscle_strength,
-            predictive_value=predictive_value,
+            form_t=FormTypes("pain_evaluation"), user_id=user_id, measures=measures
         )
 
-        return {"_links": {"self": {"href": url_for("_pipe")}}, "form_id": form_id}
+        return {
+            "_links": {"self": {"href": url_for("_painevaluation")}},
+            "form_id": form_id,
+        }
 
 
-class _PiPeView(AppResource):
+class _PainEvaluationView(AppResource):
+    """AppResource responsible for read and update PainEvaluation form information.
+
+    """
+
     @classmethod
     def get_path(cls):
         """Returns the url path of this AppResource.
@@ -1650,7 +1523,7 @@ class _PiPeView(AppResource):
             An url path.
 
         """
-        return "/forms/pipe/<int:form_id>"
+        return "/forms/painevaluation/<int:form_id>"
 
     @classmethod
     def get_dependencies(cls):
@@ -1672,8 +1545,12 @@ class _PiPeView(AppResource):
     @authentication_required
     def get(self, form_id: int):
         return {
-            "_links": {"self": {"href": url_for("_pipeview", form_id=form_id)}},
-            "form": g.session.user.get_serialized_form(FormTypes("pipe"), form_id),
+            "_links": {
+                "self": {"href": url_for("_painevaluationview", form_id=form_id)}
+            },
+            "form": g.session.user.get_serialized_form(
+                FormTypes("pain_evaluation"), form_id
+            ),
         }
 
     @authentication_required
@@ -1682,22 +1559,185 @@ class _PiPeView(AppResource):
 
         kwargs = {}
 
-        if "respiratory_muscle_strength" in patch_body:
-            respiratory_muscle_strength = patch_body["respiratory_muscle_strength"]
-            if not isinstance(respiratory_muscle_strength, dict):
-                raise BadRequest("respiratory_muscle_strength field is not a dict")
-            kwargs["respiratory_muscle_strength"] = respiratory_muscle_strength
+        if "measures" in patch_body:
+            measures = patch_body["measures"]
+            if not isinstance(measures, list):
+                raise BadRequest("measures is not a list")
+            kwargs["measures"] = measures
 
-        if "predictive_value" in patch_body:
-            predictive_value = patch_body["predictive_value"]
-            if not isinstance(predictive_value, dict):
-                raise BadRequest("predictive_value field is not a dict")
-            kwargs["predictive_value"] = predictive_value
-
-        g.session.user.update_form(FormTypes("pipe"), form_id, **kwargs)
+        g.session.user.update_form(FormTypes("pain_evaluation"), form_id, **kwargs)
 
         return {
-            "_links": {"self": {"href": url_for("_pipeview", form_id=form_id)}},
+            "_links": {
+                "self": {"href": url_for("_painevaluationview", form_id=form_id)}
+            },
+            "form_id": form_id,
+        }
+
+
+class _RespiratoryMuscleStrength(AppResource):
+    """AppResource responsible for RespiratoryMuscleStrength form creation.
+
+    """
+
+    @classmethod
+    def get_path(cls):
+        """Returns the url path of this AppResource.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            An url path.
+
+        """
+        return "/forms/respiratorymusclestrength"
+
+    @classmethod
+    def get_dependencies(cls):
+        """Returns the dependencies of this AppResource.
+
+        Notes:
+            If there's no dependency this must return an empty set.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            A set of module names that contains AppResource
+                classes used by this AppResource.
+
+        """
+        return set()
+
+    @authentication_required
+    def post(self):
+        post_body = request.get_json()
+
+        try:
+            user_id = post_body["user_id"]
+        except KeyError:
+            raise BadRequest("user_id field is missing")
+
+        try:
+            measures = post_body["measures"]
+        except KeyError:
+            raise BadRequest("measures field is missing")
+
+        if not isinstance(user_id, int):
+            raise BadRequest("user_id is not an integer")
+        if not isinstance(measures, list):
+            raise BadRequest("measures is not a list")
+
+        # try:
+        #     respiratory_muscle_strength = post_body["respiratory_muscle_strength"]
+        # except KeyError:
+        #     raise BadRequest("respiratory_muscle_strength field is missing")
+        #
+        # try:
+        #     predictive_value = post_body["predictive_value"]
+        # except KeyError:
+        #     raise BadRequest("predictive_value field is missing")
+        #
+        # if not isinstance(respiratory_muscle_strength, dict):
+        #     raise BadRequest("respiratory_muscle_strength field is not a dict")
+        # if not isinstance(predictive_value, dict):
+        #     raise BadRequest("predictive_value field is not a dict")
+
+        form_id = g.session.user.create_form(
+            form_t=FormTypes("respiratory_muscle_strength"),
+            user_id=user_id,
+            measures=measures,
+        )
+
+        return {
+            "_links": {"self": {"href": url_for("_respiratorymusclestrength")}},
+            "form_id": form_id,
+        }
+
+
+class _RespiratoryMuscleStrengthView(AppResource):
+    """AppResource responsible for read and update RespiratoryMuscleStrength form information.
+
+    """
+
+    @classmethod
+    def get_path(cls):
+        """Returns the url path of this AppResource.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            An url path.
+
+        """
+        return "/forms/respiratorymusclestrength/<int:form_id>"
+
+    @classmethod
+    def get_dependencies(cls):
+        """Returns the dependencies of this AppResource.
+
+        Notes:
+            If there's no dependency this must return an empty se-t.
+
+        Raises:
+            NotImplementedError: When not implemented by AppResource's children.
+
+        Returns:
+            A set of module names that contains AppResource
+                classes used by this AppResource.
+
+        """
+        return set()
+
+    @authentication_required
+    def get(self, form_id: int):
+        return {
+            "_links": {
+                "self": {
+                    "href": url_for("_respiratorymusclestrengthView", form_id=form_id)
+                }
+            },
+            "form": g.session.user.get_serialized_form(
+                FormTypes("respiratory_muscle_strength"), form_id
+            ),
+        }
+
+    @authentication_required
+    def patch(self, form_id: int):
+        patch_body = request.get_json()
+
+        kwargs = {}
+
+        if "measures" in patch_body:
+            measures = patch_body["measures"]
+            if not isinstance(measures, list):
+                raise BadRequest("measures is not a list")
+            kwargs["measures"] = measures
+
+        # if "respiratory_muscle_strength" in patch_body:
+        #     respiratory_muscle_strength = patch_body["respiratory_muscle_strength"]
+        #     if not isinstance(respiratory_muscle_strength, dict):
+        #         raise BadRequest("respiratory_muscle_strength field is not a dict")
+        #     kwargs["respiratory_muscle_strength"] = respiratory_muscle_strength
+        #
+        # if "predictive_value" in patch_body:
+        #     predictive_value = patch_body["predictive_value"]
+        #     if not isinstance(predictive_value, dict):
+        #         raise BadRequest("predictive_value field is not a dict")
+        #     kwargs["predictive_value"] = predictive_value
+
+        g.session.user.update_form(
+            FormTypes("respiratory_muscle_strength"), form_id, **kwargs
+        )
+
+        return {
+            "_links": {
+                "self": {
+                    "href": url_for("_respiratorymusclestrengthview", form_id=form_id)
+                }
+            },
             "form_id": form_id,
         }
 
@@ -1739,7 +1779,6 @@ class _SensoryEvaluation(AppResource):
 
     @authentication_required
     def post(self):
-
         post_body = request.get_json()
 
         try:
@@ -1748,18 +1787,17 @@ class _SensoryEvaluation(AppResource):
             raise BadRequest("user_id field is missing")
 
         try:
-            data = post_body["data"]
+            measures = post_body["measures"]
         except KeyError:
-            raise BadRequest("data field is missing")
+            raise BadRequest("measures field is missing")
 
         if not isinstance(user_id, int):
-            raise BadRequest("user_id field is not an integer")
-
-        if not isinstance(data, dict):
-            raise BadRequest("data field is not a dict")
+            raise BadRequest("user_id is not an integer")
+        if not isinstance(measures, list):
+            raise BadRequest("measures is not a list")
 
         form_id = g.session.user.create_form(
-            form_t=FormTypes("sensory_evaluation"), user_id=user_id, data=data
+            form_t=FormTypes("sensory_evaluation"), user_id=user_id, measures=measures
         )
 
         return {
@@ -1769,6 +1807,10 @@ class _SensoryEvaluation(AppResource):
 
 
 class _SensoryEvaluationView(AppResource):
+    """AppResource responsible for read and update SensoryEvaluation form information.
+
+    """
+
     @classmethod
     def get_path(cls):
         """Returns the url path of this AppResource.
@@ -1816,11 +1858,11 @@ class _SensoryEvaluationView(AppResource):
 
         kwargs = {}
 
-        if "data" in patch_body:
-            data = patch_body["data"]
-            if not isinstance(data, dict):
-                raise BadRequest("data field is not a dict")
-            kwargs["data"] = data
+        if "measures" in patch_body:
+            measures = patch_body["measures"]
+            if not isinstance(measures, list):
+                raise BadRequest("measures is not a list")
+            kwargs["measures"] = measures
 
         g.session.user.update_form(FormTypes("sensory_evaluation"), form_id, **kwargs)
 
