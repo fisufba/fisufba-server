@@ -36,6 +36,13 @@ class Form(ABC):
 
         return self._form.id
 
+    def get_user_id(self) -> int:
+        if self._form is None:
+            # This is indeed an internal server error.
+            raise Exception("form was not properly instantiated")
+
+        return self._form.user.id
+
     def serialized(self) -> dict:
         if self._form is None:
             # This is indeed an internal server error.

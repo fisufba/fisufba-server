@@ -289,9 +289,6 @@ class User:
     def get_serialized_form(
         self, form_t: forms_wrapper.FormTypes, form_id: int
     ) -> dict:
-        #: TODO own form data reading should be guaranteed by the system.
-        self._check_permissions({f"read_form_data"})
-
         if form_t is forms_wrapper.FormTypes.PatientInformation:
             form = forms_wrapper.PatientInformation(form_id)
         elif form_t is forms_wrapper.FormTypes.SociodemographicEvaluation:
@@ -313,6 +310,10 @@ class User:
         else:
             # This is indeed an internal server error.
             raise NotImplementedError("unexpected form type")
+
+        #: Own form data reading is guaranteed by the system.
+        if form.get_user_id() != self._user.id:
+            self._check_permissions({f"read_form_data"})
 
         return form.serialized()
 
