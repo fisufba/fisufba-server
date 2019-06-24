@@ -181,14 +181,19 @@ class User:
         """
         user_group_names = self._get_user_group_names(user_id)
 
-        required_permissions = set(
-            f"read_{group_name}_data" for group_name in user_group_names
-        )
-        self._check_permissions(required_permissions)
+        #: Own data reading is guaranteed by the system.
+        if user_id != self._user.id:
+            required_permissions = set(
+                f"read_{group_name}_data" for group_name in user_group_names
+            )
+            self._check_permissions(required_permissions)
 
         try:
             user = auth.User.get_by_id(user_id)
         except auth.User.DoesNotExist:
+            if user_id == self._user.id:
+                # This is indeed an internal server error.
+                raise Exception("user not found")
             raise NotFound("user not found")
 
         return dict(
@@ -284,6 +289,7 @@ class User:
     def get_serialized_form(
         self, form_t: forms_wrapper.FormTypes, form_id: int
     ) -> dict:
+        #: TODO own form data reading should be guaranteed by the system.
         self._check_permissions({f"read_form_data"})
 
         if form_t is forms_wrapper.FormTypes.PatientInformation:
