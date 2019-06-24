@@ -1056,7 +1056,7 @@ class _KineticFunctionalEvaluationView(AppResource):
 
 
 class _Goniometry(AppResource):
-    """AppResource responsible for GoniometryEvaluation form creation.
+    """AppResource responsible for Goniometry form creation.
 
     """
 
@@ -1092,7 +1092,6 @@ class _Goniometry(AppResource):
 
     @authentication_required
     def post(self):
-
         post_body = request.get_json()
 
         try:
@@ -1101,18 +1100,17 @@ class _Goniometry(AppResource):
             raise BadRequest("user_id field is missing")
 
         try:
-            data = post_body["data"]
+            measures = post_body["measures"]
         except KeyError:
-            raise BadRequest("data field is missing")
+            raise BadRequest("measures field is missing")
 
         if not isinstance(user_id, int):
-            raise BadRequest("user_id field is not an integer")
-
-        if not isinstance(data, dict):
-            raise BadRequest("data field is not a dict")
+            raise BadRequest("user_id is not an integer")
+        if not isinstance(measures, list):
+            raise BadRequest("measures is not a list")
 
         form_id = g.session.user.create_form(
-            form_t=FormTypes("goniometry"), user_id=user_id, data=data
+            form_t=FormTypes("goniometry"), user_id=user_id, measures=measures
         )
 
         return {
@@ -1122,6 +1120,10 @@ class _Goniometry(AppResource):
 
 
 class _GoniometryView(AppResource):
+    """AppResource responsible for read and update Goniometry form information.
+
+    """
+
     @classmethod
     def get_path(cls):
         """Returns the url path of this AppResource.
@@ -1167,11 +1169,11 @@ class _GoniometryView(AppResource):
 
         kwargs = {}
 
-        if "data" in patch_body:
-            data = patch_body["data"]
-            if not isinstance(data, dict):
-                raise BadRequest("data field is not a dict")
-            kwargs["data"] = data
+        if "measures" in patch_body:
+            measures = patch_body["measures"]
+            if not isinstance(measures, list):
+                raise BadRequest("measures is not a list")
+            kwargs["measures"] = measures
 
         g.session.user.update_form(FormTypes("goniometry"), form_id, **kwargs)
 
