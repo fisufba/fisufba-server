@@ -1176,8 +1176,8 @@ class _StructureAndFunctionView(AppResource):
         }
 
 
-class _Tineti(AppResource):
-    """AppResource responsible for Tineti form creation.
+class _SixMWalkTest(AppResource):
+    """AppResource responsible for SixMWalkTest form creation.
 
     """
 
@@ -1192,7 +1192,7 @@ class _Tineti(AppResource):
             An url path.
 
         """
-        return "/forms/tineti"
+        return "/forms/activityandparticipation/six_m_walk_test"
 
     @classmethod
     def get_dependencies(cls):
@@ -1213,250 +1213,6 @@ class _Tineti(AppResource):
 
     @authentication_required
     def post(self):
-
-        post_body = request.get_json()
-
-        try:
-            user_id = post_body["user_id"]
-        except KeyError:
-            raise BadRequest("user_id field is missing")
-
-        try:
-            sitting_balance = post_body["sitting_balance"]
-        except KeyError:
-            raise BadRequest("sitting_balance field is missing")
-
-        try:
-            get_up_from_the_chair = post_body["get_up_from_the_chair"]
-        except KeyError:
-            raise BadRequest("get_up_from_the_chair field is missing")
-
-        try:
-            attempts_to_get_up = post_body["attempts_to_get_up"]
-        except KeyError:
-            raise BadRequest("attempts_to_get_up field is missing")
-
-        try:
-            immediate_foot_balance = post_body["immediate_foot_balance"]
-        except KeyError:
-            raise BadRequest("immediate_foot_balance field is missing")
-
-        try:
-            foot_balance = post_body["foot_balance"]
-        except KeyError:
-            raise BadRequest("foot_balance field is missing")
-
-        try:
-            sternum_imbalance = post_body["sternum_imbalance"]
-        except KeyError:
-            raise BadRequest("sternum_imbalance field is missing")
-
-        try:
-            closed_eyes = post_body["closed_eyes"]
-        except KeyError:
-            raise BadRequest("closed_eyes field is missing")
-
-        try:
-            rotate_360 = post_body["rotate_360"]
-        except KeyError:
-            raise BadRequest("rotate_360 field is missing")
-
-        try:
-            sit_down = post_body["sit_down"]
-        except KeyError:
-            raise BadRequest("sit_down field is missing")
-
-        if not isinstance(user_id, int):
-            raise BadRequest("user_id field is not an integer")
-
-        if not isinstance(sitting_balance, list):
-            raise BadRequest("sitting_balance field is not a list")
-
-        if not isinstance(get_up_from_the_chair, list):
-            raise BadRequest("get_up_from_the_chair field is not a list")
-
-        if not isinstance(attempts_to_get_up, list):
-            raise BadRequest("attempts_to_get_up field is not a list")
-
-        if not isinstance(immediate_foot_balance, list):
-            raise BadRequest("immediate_foot_balance field is not a list")
-
-        if not isinstance(foot_balance, list):
-            raise BadRequest("foot_balance field is not a list")
-
-        if not isinstance(sternum_imbalance, list):
-            raise BadRequest("sternum_imbalance field is not a list")
-
-        if not isinstance(closed_eyes, list):
-            raise BadRequest("closed_eyes field is not a list")
-
-        if not isinstance(rotate_360, list):
-            raise BadRequest("rotate_360 field is not a list")
-
-        if not isinstance(sit_down, list):
-            raise BadRequest("sit_down field is not a list")
-
-        form_id = g.session.user.create_form(
-            form_t=FormTypes("tc6"),
-            user_id=user_id,
-            sitting_balance=sitting_balance,
-            get_up_from_the_chair=get_up_from_the_chair,
-            attempts_to_get_up=attempts_to_get_up,
-            immediate_foot_balance=immediate_foot_balance,
-            foot_balance=foot_balance,
-            sternum_imbalance=sternum_imbalance,
-            closed_eyes=closed_eyes,
-            rotate_360=rotate_360,
-            sit_down=sit_down,
-        )
-
-        return {"_links": {"self": {"href": url_for("_tineti")}}, "form_id": form_id}
-
-
-class _TinetiView(AppResource):
-    @classmethod
-    def get_path(cls):
-        """Returns the url path of this AppResource.
-
-        Raises:
-            NotImplementedError: When not implemented by AppResource's children.
-
-        Returns:
-            An url path.
-
-        """
-        return "/forms/tineti/<int:form_id>"
-
-    @classmethod
-    def get_dependencies(cls):
-        """Returns the dependencies of this AppResource.
-
-        Notes:
-            If there's no dependency this must return an empty se-t.
-
-        Raises:
-            NotImplementedError: When not implemented by AppResource's children.
-
-        Returns:
-            A set of module names that contains AppResource
-                classes used by this AppResource.
-
-        """
-        return set()
-
-    @authentication_required
-    def get(self, form_id: int):
-        return {
-            "_links": {"self": {"href": url_for("_tinetiview", form_id=form_id)}},
-            "form": g.session.user.get_serialized_form(FormTypes("tineti"), form_id),
-        }
-
-    @authentication_required
-    def patch(self, form_id: int):
-        patch_body = request.get_json()
-
-        kwargs = {}
-
-        if "sitting_balance" in patch_body:
-            sitting_balance = patch_body["sitting_balance"]
-            if not isinstance(sitting_balance, list):
-                raise BadRequest("sitting_balance field is not a list")
-            kwargs["sitting_balance"] = sitting_balance
-
-        if "get_up_from_the_chair" in patch_body:
-            get_up_from_the_chair = patch_body["get_up_from_the_chair"]
-            if not isinstance(get_up_from_the_chair, list):
-                raise BadRequest("get_up_from_the_chair field is not a list")
-            kwargs["get_up_from_the_chair"] = get_up_from_the_chair
-
-        if "attempts_to_get_up" in patch_body:
-            attempts_to_get_up = patch_body["attempts_to_get_up"]
-            if not isinstance(attempts_to_get_up, list):
-                raise BadRequest("attempts_to_get_up field is not a list")
-            kwargs["attempts_to_get_up"] = attempts_to_get_up
-
-        if "immediate_foot_balance" in patch_body:
-            immediate_foot_balance = patch_body["immediate_foot_balance"]
-            if not isinstance(immediate_foot_balance, list):
-                raise BadRequest("immediate_foot_balance field is not a list")
-            kwargs["immediate_foot_balance"] = immediate_foot_balance
-
-        if "foot_balance" in patch_body:
-            foot_balance = patch_body["foot_balance"]
-            if not isinstance(foot_balance, list):
-                raise BadRequest("foot_balance field is not a list")
-            kwargs["foot_balance"] = foot_balance
-
-        if "sternum_imbalance" in patch_body:
-            sternum_imbalance = patch_body["sternum_imbalance"]
-            if not isinstance(sternum_imbalance, list):
-                raise BadRequest("sternum_imbalance field is not a list")
-            kwargs["sternum_imbalance"] = sternum_imbalance
-
-        if "closed_eyes" in patch_body:
-            closed_eyes = patch_body["closed_eyes"]
-            if not isinstance(closed_eyes, list):
-                raise BadRequest("closed_eyes field is not a list")
-            kwargs["closed_eyes"] = closed_eyes
-
-        if "rotate_360" in patch_body:
-            rotate_360 = patch_body["rotate_360"]
-            if not isinstance(rotate_360, list):
-                raise BadRequest("rotate_360 field is not a list")
-            kwargs["rotate_360"] = rotate_360
-
-        if "sit_down" in patch_body:
-            sit_down = patch_body["sit_down"]
-            if not isinstance(sit_down, list):
-                raise BadRequest("sit_down field is not a list")
-            kwargs["sit_down"] = sit_down
-
-        g.session.user.update_form(FormTypes("tineti"), form_id, **kwargs)
-
-        return {
-            "_links": {"self": {"href": url_for("_tinetiview", form_id=form_id)}},
-            "form_id": form_id,
-        }
-
-
-class _TC6(AppResource):
-    """AppResource responsible for TC6 form creation.
-
-    """
-
-    @classmethod
-    def get_path(cls):
-        """Returns the url path of this AppResource.
-
-        Raises:
-            NotImplementedError: When not implemented by AppResource's children.
-
-        Returns:
-            An url path.
-
-        """
-        return "/forms/tc6"
-
-    @classmethod
-    def get_dependencies(cls):
-        """Returns the dependencies of this AppResource.
-
-        Notes:
-            If there's no dependency this must return an empty set.
-
-        Raises:
-            NotImplementedError: When not implemented by AppResource's children.
-
-        Returns:
-            A set of module names that contains AppResource
-                classes used by this AppResource.
-
-        """
-        return set()
-
-    @authentication_required
-    def post(self):
-
         post_body = request.get_json()
 
         try:
@@ -1484,16 +1240,23 @@ class _TC6(AppResource):
             raise BadRequest("revaluation field is not a dict")
 
         form_id = g.session.user.create_form(
-            form_t=FormTypes("tc6"),
+            form_t=FormTypes("six_m_walk_test"),
             user_id=user_id,
             evaluation=evaluation,
             revaluation=revaluation,
         )
 
-        return {"_links": {"self": {"href": url_for("_tc6")}}, "form_id": form_id}
+        return {
+            "_links": {"self": {"href": url_for("_sixmwalktest")}},
+            "form_id": form_id,
+        }
 
 
-class _TC6View(AppResource):
+class _SixMWalkTestView(AppResource):
+    """AppResource responsible for read and update SixMWalkTest form information.
+
+    """
+
     @classmethod
     def get_path(cls):
         """Returns the url path of this AppResource.
@@ -1505,7 +1268,7 @@ class _TC6View(AppResource):
             An url path.
 
         """
-        return "/forms/tc6/<int:form_id>"
+        return "/forms//activityandparticipation/six_m_walk_test/<int:form_id>"
 
     @classmethod
     def get_dependencies(cls):
@@ -1527,8 +1290,10 @@ class _TC6View(AppResource):
     @authentication_required
     def get(self, form_id: int):
         return {
-            "_links": {"self": {"href": url_for("_tc6view", form_id=form_id)}},
-            "form": g.session.user.get_serialized_form(FormTypes("tc6"), form_id),
+            "_links": {"self": {"href": url_for("_sixmwalktestview", form_id=form_id)}},
+            "form": g.session.user.get_serialized_form(
+                FormTypes("six_m_walk_test"), form_id
+            ),
         }
 
     @authentication_required
@@ -1549,10 +1314,12 @@ class _TC6View(AppResource):
                 raise BadRequest("revaluation field is not a dict")
             kwargs["revaluation"] = revaluation
 
-        g.session.user.update_form(FormTypes("tc6"), form_id, **kwargs)
+        g.session.user.update_form(FormTypes("six_m_walk_test"), form_id, **kwargs)
 
         return {
-            "_links": {"self": {"href": url_for("_tc6view", form_id=form_id)}},
+            "_links": {
+                "self": {"href": url_for("__sixmwalktestview", form_id=form_id)}
+            },
             "form_id": form_id,
         }
 
