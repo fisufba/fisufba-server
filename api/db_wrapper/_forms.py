@@ -856,6 +856,15 @@ class FormTypes(enum.Enum):
     MuscleStrength = "muscle_strength"
 
 
+STRUCTUVEANDFUNCTIONFORMTYPES = {
+    FormTypes.Goniometry,
+    FormTypes.AshworthScale,
+    FormTypes.SensoryEvaluation,
+    FormTypes.RespiratoryMuscleStrength,
+    FormTypes.PainEvaluation,
+    FormTypes.MuscleStrength,
+}
+
 STRUCTUVEANDFUNCTIONFORMTYPEVALUES = {
     FormTypes.Goniometry.value,
     FormTypes.AshworthScale.value,

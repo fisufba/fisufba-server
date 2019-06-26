@@ -361,37 +361,40 @@ class User:
     ) -> Dict[str, Union[int, Optional[List[int]]]]:
         result = dict()
 
-        try:
-            form_id = forms.PatientInformation.get(user=user).id
-        except forms.PatientInformation.DoesNotExist:
-            form_id = None
-        result[forms_wrapper.FormTypes.PatientInformation.value] = form_id
+        form_type_to_form_model = {
+            forms_wrapper.FormTypes.PatientInformation: forms.PatientInformation,
+            forms_wrapper.FormTypes.SociodemographicEvaluation: forms.SociodemographicEvaluation,
+            forms_wrapper.FormTypes.KineticFunctionalEvaluation: forms.KineticFunctionalEvaluation,
+            forms_wrapper.FormTypes.Goniometry: forms.StructureAndFunction,
+            forms_wrapper.FormTypes.AshworthScale: forms.StructureAndFunction,
+            forms_wrapper.FormTypes.SensoryEvaluation: forms.StructureAndFunction,
+            forms_wrapper.FormTypes.RespiratoryMuscleStrength: forms.StructureAndFunction,
+            forms_wrapper.FormTypes.PainEvaluation: forms.StructureAndFunction,
+            forms_wrapper.FormTypes.MuscleStrength: forms.StructureAndFunction,
+        }
 
-        try:
-            form_ids = list(
-                form.id
-                for form in forms.SociodemographicEvaluation.select().where(
-                    forms.SociodemographicEvaluation.user == user
-                )
-            )
-            if len(form_ids) == 0:
-                form_ids = None
-        except forms.SociodemographicEvaluation.DoesNotExist:
-            form_ids = None
-        result[forms_wrapper.FormTypes.SociodemographicEvaluation.value] = form_ids
+        for form_type, form_model in form_type_to_form_model.items():
+            try:
+                query = form_model.select().where(form_model.user == user)
 
-        try:
-            form_ids = list(
-                form.id
-                for form in forms.KineticFunctionalEvaluation.select().where(
-                    forms.KineticFunctionalEvaluation.user == user
-                )
-            )
-            if len(form_ids) == 0:
+                if form_type in forms_wrapper.STRUCTUVEANDFUNCTIONFORMTYPES:
+                    #: These types have a type to differ between them.
+                    query = query.where(form_model.type == form_type)
+
+                form_ids = list(form.id for form in query.execute())
+                if len(form_ids) == 0:
+                    form_ids = None
+            except forms.SociodemographicEvaluation.DoesNotExist:
                 form_ids = None
-        except forms.KineticFunctionalEvaluation.DoesNotExist:
-            form_ids = None
-        result[forms_wrapper.FormTypes.KineticFunctionalEvaluation.value] = form_ids
+
+            if form_type is forms_wrapper.FormTypes.PatientInformation and form_ids:
+                #: This type has a different return from others.
+                #: When it exists it must be only one
+                #: and must be returned out of a list.
+                assert form_ids == 1
+                result[form_type.value] = form_ids[0]
+            else:
+                result[form_type.value] = form_ids
 
         return result
 
