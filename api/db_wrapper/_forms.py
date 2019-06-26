@@ -439,6 +439,9 @@ class StructureAndFunction(Form):
         self._measures = None
 
         if self._form is not None:
+            if self._form.type is not self._structure_and_function_type:
+                raise NotFound("form not found")
+
             try:
                 query = forms.StructureAndFunctionMeasure.select().where(
                     forms.StructureAndFunctionMeasure.structure_and_function
@@ -449,7 +452,7 @@ class StructureAndFunction(Form):
                 if len(self._measures) == 0:
                     raise forms.StructureAndFunctionMeasure.DoesNotExist
             except forms.StructureAndFunctionMeasure.DoesNotExist:
-                raise NotFound("form measures not found")
+                self._measures = []
 
     def create(self, user: auth.User, **kwargs) -> int:
         if self._form is not None:
@@ -586,12 +589,22 @@ class StructureAndFunction(Form):
                         measure["sensory_type"]
                     )
 
-                measure["date"] = datetime.date.fromisoformat(measure["date"])
+                if measure["date"] is not None:
+                    measure["date"] = datetime.date.fromisoformat(measure["date"])
+                else:
+                    #: This is a hack to avoid timezone problems.
+                    #: So the front-end is able to send us None as
+                    #: a "today" value.
+                    measure["date"] = datetime.date.today()
 
         return kwargs
 
     def _restore(self):
         super()._restore()
+
+        if self._form.type is not self._structure_and_function_type:
+            # This is indeed an internal server error.
+            raise Exception("wrong form type")
 
         try:
             query = forms.StructureAndFunctionMeasure.select().where(
@@ -600,11 +613,9 @@ class StructureAndFunction(Form):
 
             self._measures = query.execute()
             if len(self._measures) == 0:
-                # This is indeed an internal server error.
-                raise Exception("form measures not found")
+                raise forms.StructureAndFunctionMeasure.DoesNotExist
         except forms.StructureAndFunctionMeasure.DoesNotExist:
-            # This is indeed an internal server error.
-            raise Exception("form measures not found")
+            self._measures = []
 
     def _serialized(self):
         measures = list()
@@ -679,13 +690,13 @@ class StructureAndFunction(Form):
                 if not isinstance(measure["value"], str):
                     raise BadRequest("invalid measure value value")
 
-                if not isinstance(measure["date"], str):
-                    raise BadRequest("invalid measure date value")
-
-                try:
-                    _ = datetime.date.fromisoformat(measure["date"])
-                except ValueError:
-                    raise BadRequest("malformed measure date")
+                if measure["date"] is not None:
+                    if not isinstance(measure["date"], str):
+                        raise BadRequest("invalid measure date value")
+                    try:
+                        _ = datetime.date.fromisoformat(measure["date"])
+                    except ValueError:
+                        raise BadRequest("malformed measure date")
 
 
 class Goniometry(StructureAndFunction):
@@ -850,6 +861,15 @@ class FormTypes(enum.Enum):
     PainEvaluation = "pain_evaluation"
     MuscleStrength = "muscle_strength"
 
+
+STRUCTUVEANDFUNCTIONFORMTYPES = {
+    FormTypes.Goniometry,
+    FormTypes.AshworthScale,
+    FormTypes.SensoryEvaluation,
+    FormTypes.RespiratoryMuscleStrength,
+    FormTypes.PainEvaluation,
+    FormTypes.MuscleStrength,
+}
 
 STRUCTUVEANDFUNCTIONFORMTYPEVALUES = {
     FormTypes.Goniometry.value,
