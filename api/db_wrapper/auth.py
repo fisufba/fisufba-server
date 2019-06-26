@@ -344,6 +344,51 @@ class User:
 
         form.update(**kwargs)
 
+    def serialized_patient_search(self, **kwargs):
+        self._check_permissions({f"search_patient"})
+
+        valid_search_kwargs = {"cpf", "display_name", "email", "phone"}
+        for kwarg in kwargs:
+            if kwarg not in valid_search_kwargs:
+                raise BadRequest(f"{kwarg} is not a searchable field")
+
+        if "cpf" in kwargs:
+            if not kwargs["cpf"].isdigit():
+                raise BadRequest("invalid cpf prefix")
+
+        if "phone" in kwargs:
+            if not kwargs["phone"].isdigit():
+                raise BadRequest("invalid phone prefix")
+
+        query = (
+            auth.User.select()
+            .join(auth.UserGroups)
+            .join(auth.Group)
+            .switch(auth.User)
+            .where(auth.Group.name == "patient")
+        )
+
+        if "cpf" in kwargs:
+            query = query.where(auth.User.cpf.startswith(kwargs["cpf"]))
+        if "display_name" in kwargs:
+            query = query.where(auth.User.display_name.contains(kwargs["display_name"]))
+        if "phone" in kwargs:
+            query = query.where(auth.User.phone.startswith(kwargs["phone"]))
+        if "email" in kwargs:
+            query = query.where(auth.User.email.contains(kwargs["email"]))
+
+        return [
+            {
+                "id": item.id,
+                "cpf": item.cpf,
+                "display_name": item.display_name,
+                "phone": item.phone,
+                "email": item.email,
+                "groups": list(self._get_user_group_names(item.id)),
+            }
+            for item in query.execute()
+        ]
+
     def _check_permissions(self, required_permissions: Set[str]):
         if len(required_permissions.difference(self._permissions)) > 0:
             raise Forbidden("not enough permission")

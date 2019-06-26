@@ -4,7 +4,6 @@ from werkzeug.exceptions import BadRequest, Forbidden
 from api.abc import AppResource
 from api.abc import authentication_required, unauthentication_required
 from api.db_wrapper.auth import User, Session
-from api.search import search_user
 
 
 class _Signup(AppResource):
@@ -376,7 +375,7 @@ class _Account(AppResource):
 
 
 class _Search(AppResource):
-    """AppResource responsible for search an user.
+    """AppResource responsible for search patient users.
 
     """
 
@@ -406,7 +405,6 @@ class _Search(AppResource):
 
     @authentication_required
     def get(self):
-
         get_body = request.args
 
         kwargs = {}
@@ -435,17 +433,13 @@ class _Search(AppResource):
                 raise BadRequest("email is not a string")
             kwargs["email"] = email
 
-        query = search_user(**kwargs)
+        items = g.session.user.serialized_patient_search(**kwargs)
 
         return {
             "_links": {"self": {"href": url_for("_search")}},
             "_embedded": {
                 "items": [
-                    {
-                        "type": "user",
-                        "_embedded": g.session.user.get_serialized_user(user.id),
-                    }
-                    for user in query
+                    {"type": "patient", "_embedded": patient} for patient in items
                 ]
             },
         }

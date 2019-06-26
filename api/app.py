@@ -58,6 +58,7 @@ class _Index(AppResource):
                     "href": url_for("_account", user_id=0),
                     "templated": True,
                 },
+                "auth:search": {"href": url_for("_search"), "templated": True},
                 "forms:index": {"href": url_for("formsindex"), "templated": True},
             }
         }
