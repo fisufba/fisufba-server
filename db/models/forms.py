@@ -85,7 +85,7 @@ class KineticFunctionalEvaluation(Form):
 
     class StructureAndFunctionTypes(enum.Flag):
         Goniometry = 1
-        ArshworthScale = 2
+        AshworthScale = 2
         SensoryEvaluation = 4
         RespiratoryMuscleStrength = 8
         Spirometry = 16
@@ -120,7 +120,7 @@ class KineticFunctionalEvaluation(Form):
         def from_string(cls, string):
             convert_table = {
                 "Goniometria": cls.Goniometry,
-                "Escala de Ashworth": cls.ArshworthScale,
+                "Escala de Ashworth": cls.AshworthScale,
                 "Avaliação Sensorial": cls.SensoryEvaluation,
                 "Força Muscular Respiratória": cls.RespiratoryMuscleStrength,
                 "Espirometria": cls.Spirometry,
@@ -139,7 +139,7 @@ class KineticFunctionalEvaluation(Form):
         def to_string(cls, enum_item):
             convert_table = {
                 cls.Goniometry: "Goniometria",
-                cls.ArshworthScale: "Escala de Ashworth",
+                cls.AshworthScale: "Escala de Ashworth",
                 cls.SensoryEvaluation: "Avaliação Sensorial",
                 cls.RespiratoryMuscleStrength: "Força Muscular Respiratória",
                 cls.Spirometry: "Espirometria",
@@ -278,8 +278,66 @@ class KineticFunctionalEvaluation(Form):
     preceptor_assessor = CharField(default=None, null=True)
 
 
+class StructureAndFunction(Form):
+    class Meta:
+        table_name = "forms_structure_and_function"
+
+    class StructureAndFunctionTypes(enum.Enum):
+        Goniometry = "goniometry"
+        AshworthScale = "ashworth_scale"
+        SensoryEvaluation = "sensory_evaluation"
+        RespiratoryMuscleStrength = "respiratory_muscle_strength"
+        Spirometry = "spirometry"
+        PeakFlow = "peak_flow"
+        Ventilometry = "ventilometry"
+        PainEvaluation = "pain_evaluation"
+        MuscleStrength = "muscle_strength"
+        Baropodometry = "baropodometry"
+        Electromyography = "electromyography"
+        Biophotogrammetry = "biophotogrammetry"
+        Dynamometry = "dynamometry"
+
+    type = EnumField(StructureAndFunctionTypes)
+
+
+class StructureAndFunctionMeasure(_BaseModel):
+    class Meta:
+        table_name = "forms_structure_and_function_measure"
+
+    class TypeTypes(enum.Enum):
+        LeftSide = "E"
+        RightSide = "D"
+
+        MaximumInspirationPressure = "PiMax"
+        MaximumExpirationPressure = "PeMax"
+
+        PainIntensity = "Intensidade da Dor"
+
+    class SensoryTypeTypes(enum.Enum):
+        LightTouch = "Toque Leve"
+        Pressure = "Pressão"
+        Stings = "Picadas"
+        Temperature = "Temperatura"
+        TactileLocation = "Localização Tática"
+        SimultaneousBilateralTouch = "Toque Bilateral Simultâneo"
+        Proprioception = "Propriocepção"
+
+    structure_and_function = ForeignKeyField(StructureAndFunction)
+
+    type = EnumField(TypeTypes, default=None, null=True)
+
+    sensory_type = EnumField(SensoryTypeTypes, default=None, null=True)
+
+    target = CharField(default=None, null=True)
+    value = CharField()
+
+    date = DateField()
+
+
 _FORMS_TABLES = (
     PatientInformation,
     SociodemographicEvaluation,
     KineticFunctionalEvaluation,
+    StructureAndFunction,
+    StructureAndFunctionMeasure,
 )
