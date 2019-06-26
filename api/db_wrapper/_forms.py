@@ -589,7 +589,13 @@ class StructureAndFunction(Form):
                         measure["sensory_type"]
                     )
 
-                measure["date"] = datetime.date.fromisoformat(measure["date"])
+                if measure["date"] is not None:
+                    measure["date"] = datetime.date.fromisoformat(measure["date"])
+                else:
+                    #: This is a hack to avoid timezone problems.
+                    #: So the front-end is able to send us None as
+                    #: a "today" value.
+                    measure["date"] = datetime.date.today()
 
         return kwargs
 
@@ -684,13 +690,13 @@ class StructureAndFunction(Form):
                 if not isinstance(measure["value"], str):
                     raise BadRequest("invalid measure value value")
 
-                if not isinstance(measure["date"], str):
-                    raise BadRequest("invalid measure date value")
-
-                try:
-                    _ = datetime.date.fromisoformat(measure["date"])
-                except ValueError:
-                    raise BadRequest("malformed measure date")
+                if measure["date"] is not None:
+                    if not isinstance(measure["date"], str):
+                        raise BadRequest("invalid measure date value")
+                    try:
+                        _ = datetime.date.fromisoformat(measure["date"])
+                    except ValueError:
+                        raise BadRequest("malformed measure date")
 
 
 class Goniometry(StructureAndFunction):
