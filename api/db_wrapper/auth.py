@@ -436,7 +436,6 @@ class User:
                 #: This type has a different return from others.
                 #: When it exists it must be only one
                 #: and must be returned out of a list.
-                #assert form_ids == 1
                 result[form_type.value] = form_ids[0]
             else:
                 result[form_type.value] = form_ids
