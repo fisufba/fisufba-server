@@ -1,4 +1,8 @@
-from peewee import Model, PostgresqlDatabase
+import datetime
+
+from peewee import Model
+from peewee import PostgresqlDatabase
+from peewee import DateTimeField
 
 import utils
 
@@ -15,3 +19,6 @@ db = PostgresqlDatabase(
 class _BaseModel(Model):
     class Meta:
         database = db
+
+    updated_at = DateTimeField(default=None, null=True)
+    created_at = DateTimeField(default=datetime.datetime.utcnow())

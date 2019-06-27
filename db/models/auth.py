@@ -18,14 +18,14 @@ class User(_BaseModel):
     cpf = FixedCharField(max_length=11, unique=True)
     password = FixedCharField(max_length=60)
 
-    display_name = CharField()
-    email = CharField(unique=True, default=None, null=True)
-
-    is_active = BooleanField(default=True)
-    is_verified = BooleanField(default=None, null=True)
+    display_name = CharField(max_length=100)
+    phone = CharField(max_length=50, default=None, null=True)
+    email = CharField(max_length=50, unique=True, default=None, null=True)
 
     last_login = DateTimeField(default=None, null=True)
-    created_at = DateTimeField(default=datetime.datetime.utcnow())
+
+    verified_at = BooleanField(default=None, null=True)
+    deactivated_at = BooleanField(default=None, null=True)
 
 
 class Group(_BaseModel):
@@ -48,8 +48,8 @@ class Permission(_BaseModel):
     class Meta:
         table_name = "auth_permission"
 
-    name = CharField(unique=True)
-    codename = CharField(unique=True)
+    name = CharField(max_length=100, unique=True)
+    codename = CharField(max_length=100, unique=True)
     description = TextField()
 
 
@@ -73,7 +73,6 @@ class Session(_BaseModel):
     expire_date = DateTimeField(
         default=datetime.datetime.utcnow() + relativedelta.relativedelta(years=1)
     )
-    created_at = DateTimeField(default=datetime.datetime.utcnow())
 
 
 _AUTH_TABLES = (User, Group, UserGroups, Permission, GroupPermissions, Session)

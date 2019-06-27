@@ -7,7 +7,7 @@ from api.db_wrapper.auth import User, Session
 
 
 class _Signup(AppResource):
-    """AppResource responsible for User account creation and deletion.
+    """AppResource responsible for User account creation.
 
     """
 
@@ -59,35 +59,42 @@ class _Signup(AppResource):
         try:
             cpf = post_body["cpf"]
         except KeyError:
-            raise BadRequest("missing cpf field")
+            raise BadRequest("cpf field is missing")
 
         try:
             password = post_body["password"]
         except KeyError:
-            raise BadRequest("missing password field")
+            raise BadRequest("password field is missing")
 
         try:
             display_name = post_body["display_name"]
         except KeyError:
-            raise BadRequest("missing display_name field")
+            raise BadRequest("display_name field is missing")
+
+        try:
+            phone = post_body["phone"]
+        except KeyError:
+            raise BadRequest("phone field is missing")
 
         try:
             email = post_body["email"]
         except KeyError:
-            raise BadRequest("missing email field")
+            raise BadRequest("email field is missing")
 
         try:
             user_group_names = post_body["user_group_names"]
         except KeyError:
-            raise BadRequest("missing user_group_names field")
+            raise BadRequest("user_group_names field is missing")
 
         # checking whether the variables are strings
         if not isinstance(cpf, str):
-            raise BadRequest("cpf field is not a string")
+            raise BadRequest("cpf is not a string")
         if not isinstance(password, str):
             raise BadRequest("password is not a string")
         if not isinstance(display_name, str):
             raise BadRequest("display_name is not a string")
+        if phone is not None and not isinstance(phone, str):
+            raise BadRequest("phone is not a string")
         if email is not None and not isinstance(email, str):
             raise BadRequest("email is not a string")
         if not isinstance(user_group_names, list):
@@ -96,13 +103,11 @@ class _Signup(AppResource):
         if len(user_group_names) != len(set(user_group_names)):
             raise BadRequest("user_group_names contains duplicate names")
 
-        if not all(isinstance(name, str) for name in user_group_names):
-            raise BadRequest("invalid group name in user_group_names")
-
         user_id = g.session.user.create_user(
             cpf=cpf,
             password=password,
             display_name=display_name,
+            phone=phone,
             email=email,
             user_group_names=set(user_group_names),
         )
@@ -170,9 +175,9 @@ class _Login(AppResource):
             raise BadRequest("password field is missing")
 
         if not isinstance(cpf, str):
-            raise BadRequest("cpf field must be string")
+            raise BadRequest("cpf is not a string")
         if not isinstance(password, str):
-            raise BadRequest("password field must be string")
+            raise BadRequest("password is not a string")
 
         target_user = User(cpf, password)
         session_token = target_user.create_session()
@@ -238,11 +243,11 @@ class _Logout(AppResource):
             raise BadRequest("token field is missing")
 
         if not isinstance(session_token, str):
-            raise BadRequest("Invalid session token")
+            raise BadRequest("token is not a string")
 
         target_session = Session(session_token)
         if target_session != g.session:
-            raise Forbidden("Trying to logout another session")
+            raise Forbidden("trying to logout of another session")
 
         target_session.expire()
 
@@ -327,29 +332,38 @@ class _Account(AppResource):
                 with information about the execution.
 
         """
+        patch_body = request.get_json()
+
         kwargs = {}
-        if "cpf" in request.form:
-            cpf = request.form["cpf"]
+
+        if "cpf" in patch_body:
+            cpf = patch_body["cpf"]
             if not isinstance(cpf, str):
-                raise Exception("Invalid cpf")  # TODO InvalidCPFError.
+                raise BadRequest("cpf is not a string")
             kwargs["cpf"] = cpf
 
-        if "password" in request.form:
-            password = request.form["password"]
+        if "password" in patch_body:
+            password = patch_body["password"]
             if not isinstance(password, str):
-                raise Exception("Invalid password")  # TODO InvalidPasswordError.
+                raise BadRequest("password is not a string")
             kwargs["password"] = password
 
-        if "display_name" in request.form:
-            display_name = request.form["display_name"]
+        if "display_name" in patch_body:
+            display_name = patch_body["display_name"]
             if not isinstance(display_name, str):
-                raise Exception("Invalid display_name")  # TODO InvaliDisplayNameError.
+                raise BadRequest("display_name is not a string")
             kwargs["display_name"] = display_name
 
-        if "email" in request.form:
-            email = request.form["email"]
+        if "phone" in patch_body:
+            phone = patch_body["phone"]
+            if phone is not None and not isinstance(phone, str):
+                raise BadRequest("phone is not a string")
+            kwargs["phone"] = phone
+
+        if "email" in patch_body:
+            email = patch_body["email"]
             if email is not None and not isinstance(email, str):
-                raise Exception("Invalid email")  # TODO InvalidEmailError.
+                raise BadRequest("email is not a string")
             kwargs["email"] = email
 
         g.session.user.update_user(user_id, **kwargs)
@@ -360,20 +374,90 @@ class _Account(AppResource):
         }
 
 
+class _Search(AppResource):
+    """AppResource responsible for search patient users.
+
+    """
+
+    @classmethod
+    def get_path(cls):
+        """Returns the url path of this AppResource.
+
+        Returns:
+            An url path.
+
+        """
+        return "/accounts/search"
+
+    @classmethod
+    def get_dependencies(cls):
+        """Returns the dependencies of this AppResource.
+
+        Notes:
+            If there's no dependency this must return an empty set.
+
+        Returns:
+            A set of module names that contains AppResource
+                classes used by this AppResource.
+
+        """
+        return set()
+
+    @authentication_required
+    def get(self):
+        get_body = request.args
+
+        kwargs = {}
+
+        if "cpf" in get_body:
+            cpf = get_body["cpf"]
+            if not isinstance(cpf, str):
+                raise BadRequest("cpf is not a string")
+            kwargs["cpf"] = cpf
+
+        if "display_name" in get_body:
+            display_name = get_body["display_name"]
+            if not isinstance(display_name, str):
+                raise BadRequest("display_name is not a string")
+            kwargs["display_name"] = display_name
+
+        if "phone" in get_body:
+            phone = get_body["phone"]
+            if not isinstance(phone, str):
+                raise BadRequest("phone is not a string")
+            kwargs["phone"] = phone
+
+        if "email" in get_body:
+            email = get_body["email"]
+            if not isinstance(email, str):
+                raise BadRequest("email is not a string")
+            kwargs["email"] = email
+
+        items = g.session.user.serialized_patient_search(**kwargs)
+
+        return {
+            "_links": {"self": {"href": url_for("_search")}},
+            "_embedded": {
+                "items": [
+                    {"type": "patient", "_embedded": patient} for patient in items
+                ]
+            },
+        }
+
+
 def authentication():
     if hasattr(g, "session"):
-        raise Exception("Inconsistent value found")
+        # This is indeed an internal server error.
+        raise Exception("inconsistent value found")
 
     session_token = request.headers.get("Authorization")
     if session_token is None:
         g.session = None
     else:
-        if not isinstance(session_token, str) or not session_token.startswith(
-            "fisufba "
-        ):
-            raise BadRequest("Invalid session token")  # TODO InvalidSessionTokenError.
+        if not isinstance(session_token, str):
+            raise BadRequest("invalid session token")
         if not session_token.startswith("fisufba "):
-            raise BadRequest("Invalid session token")  # TODO InvalidSessionTokenError.
+            raise BadRequest("invalid session token")
         g.session = Session(session_token[8:])
 
 

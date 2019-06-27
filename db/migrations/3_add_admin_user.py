@@ -24,7 +24,7 @@ def do_migration():
         raise Exception("Invalid email")  # TODO InvalidEmailError.
 
     user = auth.User.create(
-        cpf=utils.unmask_cpf(cpf),
+        cpf=cpf,
         password=bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode(
             "utf-8"
         ),

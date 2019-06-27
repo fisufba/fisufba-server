@@ -50,7 +50,7 @@ def authentication_required(func: FunctionType) -> FunctionType:
     @wraps(func)
     def decorated_function(*args, **kwargs):
         if g.session is None:
-            raise Forbidden("forbidden")  # TODO UnauthenticatedError.
+            raise Forbidden("unauthorized access")
         return func(*args, **kwargs)
 
     return decorated_function
@@ -60,7 +60,7 @@ def unauthentication_required(func: FunctionType) -> FunctionType:
     @wraps(func)
     def decorated_function(*args, **kwargs):
         if g.session is not None:
-            raise Exception  # TODO AuthenticatedError.
+            raise Forbidden("unauthorized access")
         return func(*args, **kwargs)
 
     return decorated_function
